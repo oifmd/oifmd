@@ -121,12 +121,19 @@ oifmd new <board> todo "…"  # create an issue with a fresh id
 
 ## Why
 
-Every git-native tracker (Backlog.md, git-issues, beaver-backlog, beads)
-converged on Markdown plus frontmatter, one file per issue. None published
-it as a versioned specification with a validator, so the format is only
-as portable as the tool that wrote it. OIF is the format,
-written down, with a validator, so issues outlive whichever tool wrote
-them and any agent can read them cold.
+Several tools got here first and independently reached the same shape:
+Markdown plus frontmatter, one file per issue, living in the repo.
+[Backlog.md](https://github.com/MrLesk/Backlog.md),
+[beads](https://github.com/steveyegge/beads),
+[git-issues](https://steviee.github.io/git-issues/) and
+[beaver-backlog](https://github.com/builtbystef/beaver-backlog) each
+worked it out on their own, and OIF is built on what they demonstrated.
+
+What is missing is the format itself, written down apart from any one
+tool: a specification you can implement against, a validator that says
+whether a board conforms, and a version number so it can change without
+breaking readers. That is what this is. Issues outlive whichever tool
+wrote them, and any agent can read a board cold.
 
 Design rules that fall out of being agent-first and git-native:
 
