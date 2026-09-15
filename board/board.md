@@ -12,8 +12,9 @@ columns:
     complete: true
 kinds:
   - name: epic
-    contains: [task]
+    contains: [task, bug]
   - name: task
+  - name: bug
 ---
 
 # OIF roadmap

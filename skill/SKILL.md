@@ -35,6 +35,60 @@ contains a `column.md` that says what belongs there and the exit
 criteria. Read it before moving an issue in. `column.md`, `index.md` and
 `log.md` are never issues.
 
+## Start a board
+
+If there is no `board.md`, write these three files. Adjust the columns to
+suit; the order in `board.md` is the order of the board.
+
+`<board>/board.md`:
+
+```markdown
+---
+type: board
+oif: "0.1"
+key: app
+title: My board
+columns:
+  - name: backlog
+  - name: todo
+  - name: doing
+    wip: 3
+  - name: done
+    complete: true
+---
+
+What this board is for, and how the team works.
+```
+
+`<board>/issues/<column>/column.md`, one per column:
+
+```markdown
+---
+type: column
+title: Doing
+description: Work someone has picked up and is actively on.
+---
+
+Exit: acceptance criteria all checked and the change merged.
+```
+
+Every declared column needs a directory with a `column.md` in it. Git
+does not track empty directories, so that file is what keeps an empty
+column on the board.
+
+Optionally add `kinds` to `board.md` to declare the vocabulary for an
+issue's `kind`, and which kinds may contain which:
+
+```yaml
+kinds:
+  - name: epic
+    contains: [story]
+  - name: story
+    contains: [task, bug]
+  - name: task
+  - name: bug
+```
+
 ## Filenames
 
 ```
@@ -76,10 +130,16 @@ Description as free Markdown.
 ## Acceptance Criteria
 
 - [ ] Checkable statement
+```
 
-## Comments
+A comment is a separate file, `comments/<issue-id>/<comment-id>.md`:
 
-### 2026-09-13T03:40:00Z coder/1.4
+```markdown
+---
+type: comment
+at: 2026-09-13T03:40:00Z
+by: coder/1.4
+---
 
 Comment text.
 ```
