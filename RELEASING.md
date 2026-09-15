@@ -57,6 +57,20 @@ npm publish        # publishConfig already sets public access
   January 2027, so automation should move to trusted publishing rather
   than a stored secret.
 
+## Review gate
+
+Before publishing a version, run a full review with fresh eyes over the
+whole repository, not just the diff. The first one, before going public,
+found five things that would have been embarrassing, and the first
+external adopter found a spec-versus-validator gap that no diff review
+would have caught, because the two documents were each self-consistent.
+
+Look for: what the specification says that the validator does not
+enforce, and the reverse; places two documents disagree; anything a
+reader must already know to follow; and what a hostile reader would
+quote. Read the public board too — it ships, and a board that
+contradicts the tree it sits in is the first thing anyone tests.
+
 ## Checks before either
 
 ```sh
