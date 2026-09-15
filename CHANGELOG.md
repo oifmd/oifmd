@@ -8,6 +8,18 @@ expect 0.x to move.
 - **The format.** Directory as workflow state, filename as identity
   (slug plus a random six-character id), YAML frontmatter for
   attributes, CommonMark body, references by id rather than path.
+- **Records are about things.** An optional `about` list on an issue or
+  comment names what it concerns: a repo-relative `path`, a `commit`
+  pinning the revision reviewed, or a `resource` when the target carries
+  a stable id. One record may name several targets.
+- **Standalone comments.** Not everything worth recording has a
+  lifecycle. A comment at `comments/<id>.md` with `about` records a
+  judgement with no work attached, rather than an issue born complete.
+  Conventional `kind` values: `confirms`, `disputes`, `caution`, `note`.
+- **Write boundary.** Producers write only under the board root, never
+  modifying a target and never placing a file beside one. A board can
+  therefore describe a repository nobody on the board owns. Discovery
+  runs from the board, by grep or `oifmd about`, not from the target.
 - **Comments are files**, one per comment, at
   `comments/<issue-id>/<comment-id>.md`. Keyed by identity rather than
   path, so an issue changing column leaves its comments untouched. A

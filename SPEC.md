@@ -1,5 +1,8 @@
 # Open Issue Format (OIF) — Specification
 
+> Issues and review comments as files, in any git repository, about
+> anything in it.
+
 **Version:** 0.1 (draft)
 **Status:** starting point, not a finished standard. Expect 0.x to move.
 **License:** Apache-2.0
@@ -26,6 +29,22 @@ disagree with the filesystem. Changing state, minting identity and
 adding a comment are all single create-or-rename operations: none is a
 read-modify-write of a file another writer may hold. That property is
 what lets two agents work the same board on two branches and merge.
+
+### 1.1 Write boundary
+
+A record may be *about* anything in the repository: a document, a
+configuration file, a knowledge concept, a directory. Producers MUST
+write only under the board root. They MUST NOT modify a target, and
+MUST NOT place a file beside one.
+
+This is what lets a board describe a repository nobody on the board
+owns: a vendored dependency, a submodule, a generated tree that will be
+regenerated, a binary, or a checkout taken purely to review it. A
+target's own tooling sees no diff.
+
+The cost is that a reader holding only the target cannot see that
+records exist about it. Discovery runs from the board (section 5.2),
+not from the target.
 
 ## 2. Board layout
 
@@ -170,6 +189,9 @@ tags: [auth]
 parent: 9m27dj
 depends_on: [d370av]
 related: []
+about:
+  - path: docs/auth/login.md
+    commit: 3f9c2e1
 created: 2026-09-13T03:10:00Z
 due: null
 resolution: null
@@ -193,6 +215,7 @@ external_ids:
 | `parent`       | issue ref           | See 5. |
 | `depends_on`   | list of issue ref   | This issue cannot complete until these do. |
 | `related`      | list of issue ref   | Undirected. |
+| `about`        | list of targets     | What this issue concerns, outside the board. See 3.4. |
 | `created`      | ISO 8601 datetime   | RECOMMENDED. MUST carry `Z` or a numeric offset. Git history is not reliable after import. |
 | `due`          | ISO 8601 date/time  | |
 | `resolution`   | string              | Only meaningful in a `complete` column. Common: `fixed`, `duplicate`, `wontfix`. |
@@ -215,6 +238,37 @@ convention follows the Open Knowledge Format:
 - `process:<id>` — automation, e.g. `process:ci`
 
 A bare string is permitted and means "kind unspecified".
+
+### 3.4 Targets
+
+An issue or a comment MAY carry `about`: a list of things in the
+repository it concerns. Each entry is a mapping with at least one of
+`path` or `resource`.
+
+```yaml
+about:
+  - path: docs/orders.md        # repo-relative path to the target
+    commit: 3f9c2e1             # RECOMMENDED. Revision that was reviewed.
+    anchor: "#cancellation"     # OPTIONAL, advisory. Not tracked across edits.
+  - resource: okf:acme/orders   # a stable id, when the target has one
+  - repo: https://github.com/acme/api   # OPTIONAL. Default is the board's repo.
+    path: openapi.yaml
+    commit: b81d0aa
+```
+
+- `path` is relative to the repository root, not to the board.
+- `commit` pins which revision was looked at. Without it a path is a
+  guess about the present; with it the reference stays meaningful after
+  the target is renamed, because `git log --follow` resolves the current
+  name from that commit using git alone.
+- `resource` is a stable identifier the target carries itself. When both
+  are present `resource` wins.
+- Resolution order is `resource`, then `path` at `commit`, then `path`
+  at HEAD.
+- One record MAY name several targets. A contradiction between two
+  documents is one issue about both, not two issues.
+
+Nothing is written to a target. See 1.1.
 
 ## 4. Body
 
@@ -278,15 +332,27 @@ Two branches each appending here do not merge safely. See 7.1.
 
 ### 4.4 Comment files
 
-The default form. One comment is one file:
+The default form. One comment is one file, in one of two places:
 
 ```
-comments/<issue-id>/<comment-id>.md
+comments/<issue-id>/<comment-id>.md    a comment on an issue
+comments/<comment-id>.md               a standalone comment
 ```
 
-- `<issue-id>` MUST be the id of an issue on the board. The directory is
-  created on first use and never moves, because the issue's id does not
-  change when the issue changes column.
+A comment under an issue-id directory is about that issue. A comment
+directly under `comments/` is standalone and MUST carry `about`
+(section 3.4), naming what it concerns.
+
+Standalone comments exist because not everything worth recording has a
+lifecycle. "I checked this against the billing code and it holds",
+"careful, this reads as more settled than it is" and "this is the good
+one, use it" are all durable, attributable judgements with no state to
+move through. Filing them as issues would mean creating an issue that
+is born complete, which makes the column carry nothing.
+
+- `<issue-id>`, when present, MUST be the id of an issue on the board.
+  The directory is created on first use and never moves, because the
+  issue's id does not change when the issue changes column.
 - `<comment-id>` is a fresh id generated exactly as an issue id is
   (section 3.1): six characters of lowercase Crockford base32, random.
 
@@ -306,6 +372,10 @@ Keep the strip for whitespace only. Add a test for the full punctuation set.
 - `at` is REQUIRED: an ISO 8601 datetime carrying `Z` or a numeric
   offset.
 - `by` is REQUIRED: an actor as in 3.3.
+- `kind` is OPTIONAL and free. These values have conventional meaning:
+  `confirms` (checked, holds), `disputes` (this is wrong),
+  `caution` (correct but misleading), `note` (neither).
+- `about` is REQUIRED on a standalone comment and OPTIONAL otherwise.
 - Any further keys carry what the inline grammar puts in `key=value`
   pairs. Unlike that grammar, values here are YAML and so may contain
   spaces.
@@ -314,6 +384,22 @@ Keep the strip for whitespace only. Add a test for the full punctuation set.
 Comment files are create-only. Producers MUST NOT edit or delete one; a
 correction is a new comment. Canonical order is by `at`, not by filename
 and not by directory listing order.
+
+A standalone comment:
+
+```markdown
+---
+type: comment
+at: 2026-09-15T04:10:00Z
+by: human:sam
+kind: confirms
+about:
+  - path: docs/orders.md
+    commit: 3f9c2e1
+---
+
+Checked against the billing code at this commit. Holds.
+```
 
 To read an issue and its history with no tool:
 
@@ -326,6 +412,8 @@ differ. This is the property that makes concurrent issue creation safe
 (section 3.1), applied one level down.
 
 ## 5. References
+
+### 5.1 Referring to a record
 
 An issue reference is:
 
@@ -343,6 +431,30 @@ current location.
 
 In prose, commit messages and chat, use the same tokens.
 
+### 5.2 Finding records about a target
+
+Records point at targets; targets do not point back (section 1.1). To
+find what a board says about a file:
+
+```sh
+grep -rl -- 'docs/orders.md' <board>/
+```
+
+This is a scan of many small text files and costs milliseconds on
+boards of a few thousand records. Existence is never stale, because
+each record is the source of truth rather than a cache of one. If the
+target was renamed, resolve the old name first with
+`git log --follow -- <path>` and grep for both.
+
+Consumers MUST NOT depend on any index of targets. A tool MAY
+materialise one, on the same terms as an OKF `index.md` (section 9): it
+is a convenience, never the source of truth, and it MUST NOT be written
+outside the board root.
+
+An agent will not run this unless its instructions say to. That is a
+property of every tracker, not of this format. The recommended
+instruction is to list the records about a file before acting on it.
+
 ## 6. Operations
 
 | Operation | Mechanism |
@@ -351,7 +463,9 @@ In prose, commit messages and chat, use the same tokens.
 | move      | `git mv` to another column directory |
 | read      | `cat issues/*/*-<id>.md comments/<id>/*.md` |
 | edit      | rewrite frontmatter or body, preserving unknown keys |
-| comment   | write `comments/<id>/<new-id>.md` (or, on an `inline` board, append under `## Comments`) |
+| comment   | write `comments/<issue-id>/<new-id>.md` (or, on an `inline` board, append under `## Comments`) |
+| remark    | write `comments/<new-id>.md` with `about`, when there is no issue and no lifecycle |
+| find      | `grep -rl -- '<path>' <board>/` |
 | close     | move to a `complete` column; optionally set `resolution` |
 | delete    | not an operation. Move to a hidden complete column instead |
 
@@ -423,10 +537,20 @@ A conforming board:
    every level-3 heading under it matching the comment grammar;
 8. when `board.md` declares `kinds`, has every issue `kind` declared and
    every child's kind listed in its parent's `contains`;
-9. has every file under `comments/` at `comments/<issue-id>/<id>.md`,
-   where `<issue-id>` is an id present on the board and `<id>` matches
-   the id grammar, carrying `type: comment` with `at` and `by`. A
-   comment directory naming no existing issue is an error.
+9. has every file under `comments/` at either
+   `comments/<issue-id>/<id>.md`, where `<issue-id>` is an id present on
+   the board, or `comments/<id>.md`, in both cases carrying
+   `type: comment` with `at` and `by`. A comment directory naming no
+   existing issue is an error. A comment directly under `comments/`
+   without `about` is an error;
+10. has every `about` entry carrying `path` or `resource`, with
+    `commit` matching `^[0-9a-f]{7,40}$` when present.
+
+Validators SHOULD warn when an `about.path` names nothing at HEAD and
+carries no `commit` to resolve it from. They MUST NOT fail on it: the
+target may live in a repository the board does not contain.
+
+Producers MUST NOT write outside the board root (section 1.1).
 
 A conforming board SHOULD NOT carry an inline `## Comments` section
 while declaring `comments: sidecar`; validators SHOULD warn rather than
@@ -476,7 +600,24 @@ An OIF board is a conforming OKF v0.2 bundle when:
 | `status`       | absent         | OIF forbids it; OKF reads absence as `stable` |
 | `generated`, `verified`, `sources` | passed through | optional provenance; `verified` reads naturally as review evidence |
 
-### 9.3 The one deliberate divergence
+### 9.3 Records about OKF concepts
+
+An OIF record MAY be about an OKF concept. Put the concept's `resource`
+in an `about` entry (section 3.4); it is the stable identifier, so it
+survives the concept being moved, which a path does not.
+
+OKF's `verified[]` records that an actor confirmed a concept, never what
+they said. A standalone comment with `kind: confirms` or
+`kind: disputes` carries the reasoning that `verified[]` has no room
+for. The two compose: the comment is evidence, and a human or producer
+may promote it into the concept's own frontmatter.
+
+An OIF producer MUST NOT write `verified[]`, or any other key, into an
+OKF concept. That follows from the write boundary (section 1.1), and it
+keeps OKF's trust tiers derivable from the concept alone, as OKF
+requires.
+
+### 9.4 The one deliberate divergence
 
 OKF defines a concept's identity as its path. In OIF the path carries
 state, so an issue's OKF concept id changes on every move. OKF does not

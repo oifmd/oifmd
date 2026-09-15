@@ -6,6 +6,7 @@ Usage:
   oifmd new BOARD COLUMN TITLE    create an issue with a fresh id, print its path
   oifmd id                        print a fresh id
   oifmd index [BOARD]             write an OKF-shaped root index.md
+  oifmd about TARGET [BOARD]      list records about a path or resource
 """
 from __future__ import annotations
 
@@ -31,6 +32,7 @@ COMMENT_RE = re.compile(
 )
 RESERVED = ("id", "status", "state", "column")
 RESERVED_FILES = ("column.md", "index.md", "log.md")
+COMMIT_RE = re.compile(r"^[0-9a-f]{7,40}$")
 LIST_OF_STR = ("assignees", "tags", "aliases")
 OFFSET_RE = re.compile(r"(?:Z|[+-]\d{2}:?\d{2})$")
 RESOURCE_RE = re.compile(rf"^oif:[a-z][a-z0-9]{{1,15}}/{ID_RE}$")
@@ -175,15 +177,64 @@ def scan_issues(root: Path, board: dict) -> tuple[list[Issue], list[Finding]]:
     return issues, findings
 
 
+def check_about(p: str, front: dict, required: bool) -> list[Finding]:
+    """Validate the `about` key (spec 3.4)."""
+    out: list[Finding] = []
+    about = front.get("about")
+    if about is None:
+        if required:
+            out.append(Finding("error", p, "a standalone comment must carry about (spec 4.4)"))
+        return out
+    if not isinstance(about, list) or not about:
+        out.append(Finding("error", p, "about must be a non-empty list of targets"))
+        return out
+    for e in about:
+        if not isinstance(e, dict):
+            out.append(Finding("error", p, f"about entry {e!r} must be a mapping")); continue
+        if not (e.get("path") or e.get("resource")):
+            out.append(Finding("error", p, "each about entry needs path or resource"))
+        c = e.get("commit")
+        if c is not None and not (isinstance(c, str) and COMMIT_RE.match(c)):
+            out.append(Finding("error", p, f"about commit {c!r} must be 7-40 hex characters"))
+    return out
+
+
+def check_comment_file(f: Path, standalone: bool) -> list[Finding]:
+    out: list[Finding] = []
+    p = str(f)
+    front, _, err = split_frontmatter(f.read_text(encoding="utf-8"))
+    if err:
+        return [Finding("error", p, err)]
+    if front.get("type") != "comment":
+        out.append(Finding("error", p, "comment must have type: comment"))
+    at = front.get("at")
+    if at is None:
+        out.append(Finding("error", p, "comment requires at"))
+    elif isinstance(at, datetime):
+        if at.tzinfo is None:
+            out.append(Finding("error", p, "at must carry Z or a numeric offset"))
+    elif not (isinstance(at, str) and OFFSET_RE.search(at)):
+        out.append(Finding("error", p, "at must be ISO 8601 with Z or a numeric offset"))
+    if not isinstance(front.get("by"), str) or not front.get("by"):
+        out.append(Finding("error", p, "comment requires by (an actor)"))
+    out += check_about(p, front, required=standalone)
+    return out
+
+
 def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
-    """Validate comments/<issue-id>/<comment-id>.md (spec 4.4)."""
+    """Validate comments/ (spec 4.4): per-issue dirs and standalone files."""
     out: list[Finding] = []
     cdir = root / "comments"
     if not cdir.is_dir():
         return out
     for sub in sorted(p for p in cdir.iterdir()):
-        if not sub.is_dir():
-            out.append(Finding("error", str(sub), "comments/ holds one directory per issue id"))
+        if sub.is_file():
+            if sub.name in ("index.md", "log.md"):
+                continue
+            if not re.fullmatch(rf"{ID_RE}\.md", sub.name):
+                out.append(Finding("error", str(sub), "standalone comment filename must be <id>.md"))
+                continue
+            out += check_comment_file(sub, standalone=True)
             continue
         if not re.fullmatch(ID_RE, sub.name):
             out.append(Finding("error", str(sub), f"{sub.name!r} is not an issue id"))
@@ -197,21 +248,7 @@ def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
             if not re.fullmatch(rf"{ID_RE}\.md", f.name):
                 out.append(Finding("error", str(f), "comment filename must be <id>.md with a 6-char id"))
                 continue
-            front, _, err = split_frontmatter(f.read_text(encoding="utf-8"))
-            if err:
-                out.append(Finding("error", str(f), err)); continue
-            if front.get("type") != "comment":
-                out.append(Finding("error", str(f), "comment must have type: comment"))
-            at = front.get("at")
-            if at is None:
-                out.append(Finding("error", str(f), "comment requires at"))
-            elif isinstance(at, datetime):
-                if at.tzinfo is None:
-                    out.append(Finding("error", str(f), "at must carry Z or a numeric offset"))
-            elif not (isinstance(at, str) and OFFSET_RE.search(at)):
-                out.append(Finding("error", str(f), "at must be ISO 8601 with Z or a numeric offset"))
-            if not isinstance(front.get("by"), str) or not front.get("by"):
-                out.append(Finding("error", str(f), "comment requires by (an actor)"))
+            out += check_comment_file(f, standalone=False)
     return out
 
 
@@ -229,6 +266,7 @@ def check_issue(issue: Issue, ids: set[str], key: str | None = None) -> list[Fin
         out.append(Finding("error", p, "resource must be oif:<key>/<id>"))
     elif isinstance(res, str) and not res.endswith("/" + issue.id):
         out.append(Finding("error", p, f"resource {res} does not end with this file's id {issue.id}"))
+    out += check_about(p, front, required=False)
     for k in ("kind", "description", "priority"):
         if k in front and not isinstance(front[k], str):
             out.append(Finding("error", p, f"{k} must be a string"))
@@ -401,6 +439,33 @@ def cmd_index(root: Path) -> int:
     return 0
 
 
+def cmd_about(root: Path, target: str) -> int:
+    """List records naming a target path (spec 5.2)."""
+    hits = []
+    for d in ("issues", "comments"):
+        base = root / d
+        if not base.is_dir():
+            continue
+        for f in sorted(base.rglob("*.md")):
+            if f.name in RESERVED_FILES:
+                continue
+            front, _, err = split_frontmatter(f.read_text(encoding="utf-8"))
+            if err or not front:
+                continue
+            for e in front.get("about") or []:
+                if isinstance(e, dict) and (e.get("path") == target or e.get("resource") == target):
+                    hits.append((f, front, e))
+                    break
+    for f, front, e in hits:
+        where = f.parent.name if f.parent.parent.name == "issues" else "comment"
+        label = front.get("title") or front.get("kind") or "comment"
+        print(f"{f.stem.rsplit('-', 1)[-1]}  [{where}]  {label}"
+              + (f"  @{e['commit']}" if e.get("commit") else ""))
+    if not hits:
+        print(f"no records about {target}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if not args or args[0] in ("-h", "--help"):
@@ -412,6 +477,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_validate(Path(rest[0] if rest else "."))
     if cmd == "ls":
         return cmd_ls(Path(rest[0] if rest else "."), rest[1] if len(rest) > 1 else None)
+    if cmd == "about":
+        if not rest:
+            print("usage: oifmd about TARGET [BOARD]"); return 2
+        return cmd_about(Path(rest[1] if len(rest) > 1 else "."), rest[0])
     if cmd == "index":
         return cmd_index(Path(rest[0] if rest else "."))
     if cmd == "new":

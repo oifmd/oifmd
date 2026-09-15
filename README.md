@@ -1,7 +1,12 @@
 # Open Issue Format (OIF)
 
-**Issues as files.** A directory of Markdown files that any agent or
-human can run as a board with `ls`, `cat` and `git mv`. No tool required.
+**Issues and review comments as files, in any git repo, about anything
+in it.**
+
+An issue is a Markdown file whose directory is its state. A comment is a
+create-only file recording who said what, when, about which issue or
+which path at which commit. Merge-safe by construction. Nothing
+installed, and nothing written into the files being discussed.
 
 - **Spec:** [SPEC.md](SPEC.md) · version 0.1 (draft)
 - **Site:** https://oif.md
@@ -38,6 +43,9 @@ priority: high
 assignees: [coder/1.4]
 requested_by: human:sam
 tags: [auth]
+about:
+  - path: src/LoginForm.svelte
+    commit: 3f9c2e1
 created: 2026-09-13T03:10:00Z
 ---
 
@@ -73,6 +81,29 @@ Read an issue and its whole history with one command:
 cat issues/*/*-7k2x9m.md comments/7k2x9m/*.md
 ```
 
+Find what the board says about a file before you touch it:
+
+```sh
+grep -rl -- 'src/LoginForm.svelte' .     # or: oifmd about src/LoginForm.svelte
+```
+
+Not everything has a lifecycle. A standalone comment records a judgement
+with no work attached, at `comments/<id>.md`:
+
+```markdown
+---
+type: comment
+at: 2026-09-15T04:10:00Z
+by: human:sam
+kind: confirms
+about:
+  - path: docs/orders.md
+    commit: 3f9c2e1
+---
+
+Checked against the billing code at this commit. Holds.
+```
+
 ## Why
 
 Every git-native tracker (Backlog.md, git-issues, beaver-backlog, beads)
@@ -89,6 +120,10 @@ Design rules that fall out of being agent-first and git-native:
   branches can create issues at once and merge with no counter, no
   scan, no renumbering. Sequential keys like `APP-2753` survive as
   aliases.
+- **Records point at things; things never point back.** Everything is
+  written under the board root, so a board can describe a vendored
+  dependency, a submodule, a generated tree or a repo you only cloned to
+  review. The target's own tooling sees no diff.
 - **One comment is one file**, keyed by the issue's id. Two agents
   commenting at once write two different paths, so nothing conflicts and
   nothing is lost. Appending to a shared file does not survive concurrent
