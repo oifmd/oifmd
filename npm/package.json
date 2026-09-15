@@ -1,7 +1,7 @@
 {
   "name": "@oifmd/oifmd",
   "version": "0.0.1",
-  "description": "Open Issue Format (OIF) \u2014 issues and review comments as files, in any git repository, about anything in it.",
+  "description": "Open Issue Format (OIF) — issues and review comments as files, in any git repository, about anything in it.",
   "keywords": [
     "oif",
     "issues",
@@ -18,7 +18,7 @@
   },
   "license": "Apache-2.0",
   "bin": {
-    "oifmd": "./bin/oifmd.js"
+    "oifmd": "bin/oifmd.js"
   },
   "files": [
     "bin",
