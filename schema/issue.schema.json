@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oif.md/schema/0.1/issue.schema.json",
+  "title": "OIF issue frontmatter",
+  "type": "object",
+  "$defs": {
+    "actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ref": {
+      "type": "string",
+      "pattern": "^(?:[a-z][a-z0-9]{1,15}-)?[0-9a-hjkmnp-tv-z]{6}$"
+    },
+    "datetime": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "properties": {
+    "type": {
+      "const": "issue"
+    },
+    "resource": {
+      "type": "string",
+      "pattern": "^oif:[a-z][a-z0-9]{1,15}/[0-9a-hjkmnp-tv-z]{6}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    },
+    "assignees": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/actor"
+      }
+    },
+    "requested_by": {
+      "$ref": "#/$defs/actor"
+    },
+    "parent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    },
+    "related": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    },
+    "created": {
+      "$ref": "#/$defs/datetime"
+    },
+    "due": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resolution": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "external_ids": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "id"
+        ]
+      },
+      {
+        "required": [
+          "status"
+        ]
+      },
+      {
+        "required": [
+          "state"
+        ]
+      },
+      {
+        "required": [
+          "column"
+        ]
+      }
+    ]
+  },
+  "additionalProperties": true,
+  "required": [
+    "type"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oif.md/schema/0.1/column.schema.json",
+  "title": "OIF column.md frontmatter",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "const": "column"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "wip"
+        ]
+      },
+      {
+        "required": [
+          "complete"
+        ]
+      },
+      {
+        "required": [
+          "hidden"
+        ]
+      },
+      {
+        "required": [
+          "order"
+        ]
+      }
+    ]
+  },
+  "additionalProperties": true
+}

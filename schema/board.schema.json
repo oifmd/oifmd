@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oif.md/schema/0.1/board.schema.json",
+  "title": "OIF board.md frontmatter",
+  "type": "object",
+  "required": [
+    "type",
+    "oif",
+    "columns"
+  ],
+  "properties": {
+    "type": {
+      "const": "board"
+    },
+    "oif": {
+      "type": "string",
+      "pattern": "^0\\.1$"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]{1,15}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[_-][a-z0-9]+)*$"
+          },
+          "complete": {
+            "type": "boolean",
+            "default": false
+          },
+          "hidden": {
+            "type": "boolean",
+            "default": false
+          },
+          "wip": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "contains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

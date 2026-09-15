@@ -1,0 +1,2 @@
+# Issue files must NOT use merge=union: it silently drops a comment body
+# when two branches append comments sharing any line. See SPEC.md section 7.1.

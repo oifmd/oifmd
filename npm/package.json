@@ -1,0 +1,11 @@
+{
+  "name": "oifmd",
+  "version": "0.0.1",
+  "description": "Open Issue Format (OIF) — issues as files. Spec and validator.",
+  "keywords": ["oif", "issues", "issue-tracker", "markdown", "frontmatter", "okf", "git"],
+  "homepage": "https://oif.md",
+  "repository": { "type": "git", "url": "git+https://github.com/oifmd/oifmd.git" },
+  "license": "Apache-2.0",
+  "bin": { "oifmd": "./bin/oifmd.js" },
+  "files": ["bin", "README.md"]
+}
