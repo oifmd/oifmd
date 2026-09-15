@@ -5,6 +5,7 @@ title: A bare id in prose is ambiguous with a short git hash
 kind: bug
 priority: medium
 requested_by: human:sean
+resolution: fixed
 created: 2026-09-15T19:30:00+10:00
 about:
   - path: SPEC.md
@@ -50,7 +51,7 @@ character sets are actually permitted.
 
 ## Acceptance Criteria
 
-- [ ] Decision recorded with reasoning
-- [ ] SPEC.md section 5.1 updated, and section 3.4 `about` kept consistent with it
-- [ ] The agent skill uses the chosen form
-- [ ] Whether GitHub autolinks can resolve the chosen form is established, not assumed
+- [x] Decision recorded with reasoning
+- [x] SPEC.md section 5.1 updated, and section 3.4 `about` kept consistent with it
+- [x] The agent skill uses the chosen form
+- [x] Whether GitHub autolinks can resolve the chosen form is established, not assumed

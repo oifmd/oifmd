@@ -214,9 +214,22 @@ understand. Preserve existing comments verbatim.
 
 ## References
 
-Refer to another issue by its id (`7k2x9m`) inside the board, or
-`<key>-<id>` (`app-7k2x9m`) across boards. Find it with
-`ls issues/*/*-7k2x9m.md`. Never link by path; paths change on move.
+Refer to a record in prose, commit messages and chat as `<key>-<id>`,
+using the board's `key` from `board.md`: `app-7k2x9m`. Use that form for
+records on this board too, not only across boards.
+
+Do not write a bare id in prose. One id in 64 is all hexadecimal
+characters and reads as an abbreviated commit hash, and a bare id gives
+a reader nothing to recognise.
+
+Inside the frontmatter keys `parent`, `depends_on` and `related` the
+bare id is fine, because the key name already says what the value is.
+
+Find a record with `ls issues/*/*-7k2x9m.md`. Never link by path; paths
+change on every move.
+
+On GitHub you can add a repository autolink with the prefix `<key>-` so
+every token in an issue, pull request or commit message becomes a link.
 
 ## Sanity checks before you finish
 

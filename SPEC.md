@@ -108,7 +108,7 @@ specification writes that directory as `<board>`.
 ---
 type: board           # REQUIRED. Fixed value.
 oif: "0.1"            # REQUIRED. Spec version this board conforms to.
-key: app              # OPTIONAL. Board key for cross-board references.
+key: app              # RECOMMENDED. Used to reference records; see 5.1.
 columns:              # REQUIRED. Ordered. Names are directory names.
   - name: backlog
   - name: todo
@@ -134,7 +134,9 @@ kinds:                # OPTIONAL. When absent, `kind` is free text.
 - `columns[].name` MUST match `^[a-z0-9]+(?:[_-][a-z0-9]+)*$`.
 - A directory under `issues/` whose name is not a declared column is a
   validation error.
-- `key`, when present, MUST match `^[a-z][a-z0-9]{1,15}$`.
+- `key`, when present, MUST match `^[a-z][a-z0-9]{1,15}$`. It is
+  RECOMMENDED: a board without one cannot be referenced by token and
+  its records have no `resource` (section 5.1).
 - `comments` selects where comments are written: `sidecar` (section 4.4)
   or `inline` (section 4.3). When absent the value is `sidecar`.
   Producers MUST honour it when writing. Consumers MUST read both forms
@@ -464,23 +466,40 @@ differ. This is the property that makes concurrent issue creation safe
 
 ### 5.1 Referring to a record
 
-An issue reference is:
+A reference token is `<key>-<id>`, e.g. `app-7k2x9m`, where `<key>` is
+the target board's `key` (section 2.1). Use this token in prose, commit
+messages, chat, and anywhere else a reader may not know which board is
+meant. A token whose `<key>` is this board's own key refers to this
+board.
 
-- the bare id, e.g. `7k2x9m`, when referring within the same board;
-- `<key>-<id>`, e.g. `app-7k2x9m`, when referring across boards, where
-  `<key>` is the target board's `key`. A prefixed reference whose `<key>`
-  equals this board's own `key` refers to this board, and resolves
-  locally.
+Inside the frontmatter keys `parent`, `depends_on` and `related`, the
+bare id, e.g. `7k2x9m`, MAY be used for an issue on the same board; the
+key name identifies the value as an issue reference. Both forms are
+accepted there.
+
+The bare id MUST NOT be used as a reference in prose. One id in 64 is
+made only of hexadecimal characters and is indistinguishable from an
+abbreviated commit hash, and a bare id gives a reader or a tool nothing
+to recognise it by.
+
+A board with no `key` cannot be referenced by token and has no
+`resource`; `key` is therefore RECOMMENDED.
 
 References MUST NOT be file paths, because paths change on every move.
-Consumers resolve a reference by globbing `issues/*/*-<id>.md`.
+Consumers resolve a reference by globbing `issues/*/*-<id>.md`. A slug
+may end in a word that matches the key grammar, so tools MUST NOT
+extract tokens from paths or from text preceded by `-`, `/` or an
+alphanumeric.
 
 The URI form of a reference is `oif:<key>/<id>`, which is the value of
-the issue's `resource` key. A board publisher MAY make it resolvable
-over HTTPS, e.g. `https://oif.md/<key>/<id>` redirecting to the file's
-current location.
+the issue's `resource` key and of `about.resource` (section 3.4). Token
+and URI convert mechanically. A board publisher MAY make the URI
+resolvable over HTTPS, e.g. `https://oif.md/<key>/<id>`.
 
-In prose, commit messages and chat, use the same tokens.
+A repository host that supports configurable autolinks (GitHub does,
+across issues, pull requests and commit messages) can be given the
+prefix `<key>-` so that every token renders as a link; one prefix per
+referenced board.
 
 ### 5.2 Finding records about a target
 

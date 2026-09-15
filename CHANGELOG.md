@@ -29,6 +29,12 @@ expect 0.x to move.
   optionally, the `kinds` an issue may have and which kinds may contain
   which. The specification names no hierarchy of its own. Ready boards
   for Kanban, Scrum and Shape Up ship in `profiles/`.
+- **References in prose are `<key>-<id>`**, e.g. `app-7k2x9m`, on the
+  same board as well as across boards. A bare id is reserved for the
+  frontmatter reference keys, where the key name says what the value is.
+  One id in 64 is all hexadecimal and reads as an abbreviated commit
+  hash, and the token form also autolinks on hosts that support a
+  configurable prefix.
 - **Open Knowledge Format compatibility.** A board is a conforming OKF
   v0.2 bundle: `type` on every file, OKF's actor convention, OKF's
   unknown-key rule. `resource: oif:<key>/<id>` carries the stable

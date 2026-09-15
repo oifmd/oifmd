@@ -99,11 +99,11 @@ def load_board(root: Path) -> tuple[dict | None, list[Finding]]:
     front, _, err = split_frontmatter(bm.read_text(encoding="utf-8"))
     if err:
         return None, [Finding("error", str(bm), err)]
+    key = front.get("key")
     if front.get("type") != "board":
         findings.append(Finding("error", str(bm), "board.md must have type: board"))
     if str(front.get("oif", "")) != "0.1":
         findings.append(Finding("error", str(bm), "oif must be \"0.1\""))
-    key = front.get("key")
     if key is not None and not (isinstance(key, str) and KEY_RE.match(key)):
         findings.append(Finding("error", str(bm), f"key {key!r} must match {KEY_RE.pattern}"))
     cols = front.get("columns")
@@ -122,6 +122,9 @@ def load_board(root: Path) -> tuple[dict | None, list[Finding]]:
             findings.append(Finding("error", str(bm), f"duplicate column {n!r}"))
         names.append(n)
     front["_column_names"] = names
+    if key is None:
+        findings.append(Finding("warn", str(bm),
+            "board.md has no key: records cannot be referenced by token and have no resource (spec 5.1)"))
     cmode = front.get("comments", "sidecar")
     if cmode not in ("sidecar", "inline"):
         findings.append(Finding("error", str(bm), "comments must be 'sidecar' or 'inline'"))
