@@ -1,5 +1,5 @@
 {
-  "name": "oifmd",
+  "name": "@oifmd/oifmd",
   "version": "0.0.1",
   "description": "Open Issue Format (OIF) \u2014 issues and review comments as files, in any git repository, about anything in it.",
   "keywords": [
@@ -30,5 +30,8 @@
   },
   "bugs": {
     "url": "https://github.com/oifmd/oifmd/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

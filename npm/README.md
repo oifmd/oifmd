@@ -1,4 +1,4 @@
-# oifmd
+# @oifmd/oifmd
 
 Holds the npm name for the [Open Issue Format](https://oif.md): issues
 and review comments as files, in any git repository, about anything in
@@ -11,8 +11,12 @@ pip install oifmd
 oifmd validate <board>
 ```
 
-A JavaScript validator is planned. Until then this package only prints
-where to look.
+```sh
+npx @oifmd/oifmd
+```
+
+prints this notice today. Once the JavaScript validator ships it
+installs as the `oifmd` command, identical to the Python one.
 
 - Specification: https://oif.md/SPEC.md
 - Repository: https://github.com/oifmd/oifmd
