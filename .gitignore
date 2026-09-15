@@ -6,3 +6,4 @@ dist/
 npm/node_modules/
 tmp/
 build/
+docs/
