@@ -217,6 +217,12 @@ external_ids:
 | `related`      | list of issue ref   | Undirected. |
 | `about`        | list of targets     | What this issue concerns, outside the board. See 3.4. |
 | `created`      | ISO 8601 datetime   | RECOMMENDED. MUST carry `Z` or a numeric offset. Git history is not reliable after import. |
+
+A note for implementers: a YAML parser yields a native date or datetime
+object for an unquoted timestamp, not a string. Consumers MUST accept
+both that and a quoted string, and SHOULD serialise back to an ISO 8601
+string with an explicit offset when writing JSON. The published schemas
+describe the JSON projection, so they specify strings.
 | `due`          | ISO 8601 date/time  | |
 | `resolution`   | string              | Only meaningful in a `complete` column. Common: `fixed`, `duplicate`, `wontfix`. |
 | `aliases`      | list of string      | Other names this issue answers to, e.g. legacy sequential keys. |
@@ -577,8 +583,11 @@ An OIF board is a conforming OKF v0.2 bundle when:
    `board.md` and issues; any other Markdown placed under the board root
    must add a `type`);
 2. comment files (4.4) carry `type: comment`, so they are OKF concepts
-   too; they SHOULD carry
-   `resource: oif:<key>/<issue-id>/<comment-id>`;
+   too. A comment on an issue SHOULD carry
+   `resource: oif:<key>/<issue-id>/<comment-id>`; a standalone comment
+   SHOULD carry `resource: oif:<key>/<comment-id>`. The two-segment form
+   cannot collide with an issue's `resource` (section 5.1), because ids
+   are unique across every record on a board (section 8);
 3. optionally, a root `index.md` carries `okf_version: "0.2"` to declare
    it. OKF index files carry no other frontmatter and their body is
    sections of bullet links to concepts, so board configuration MUST NOT

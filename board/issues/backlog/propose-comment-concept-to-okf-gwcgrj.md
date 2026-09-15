@@ -39,10 +39,12 @@ commenting.
 **Do not file yet.** Blocked on the identity proposal landing, since a
 comment pointing at a path-identified concept is the most fragile
 inbound link in a bundle. Also blocked on running OIF boards long enough
-to report real counts: concurrent-append saves, rename dangles. The
-upstream culture rewards measurements over designs; maintainers are
-near-silent on issues and the one community spec pull request closed
-unmerged, so peer convergence with evidence is what moves things.
+to report real counts: concurrent-append saves, rename dangles.
+
+Design proposals from a new voice carry further when they arrive with
+measurements attached, and several independent producers reaching the
+same shape carries further still. Run the boards, gather the numbers,
+then file.
 
 ## Acceptance Criteria
 

@@ -10,6 +10,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pyyaml
-      - run: PYTHONPATH=src python -m oifmd validate board
-      - run: PYTHONPATH=src python -m oifmd validate examples/minimal
+      - run: pip install pyyaml jsonschema
+      - name: Boards conform to the spec
+        run: |
+          PYTHONPATH=src python -m oifmd validate board
+          PYTHONPATH=src python -m oifmd validate examples/minimal
+      - name: Records validate against the JSON schemas
+        run: PYTHONPATH=src python tests/check_schemas.py
+      - name: Concurrency properties hold
+        run: python tests/test_concurrent_comments.py
+      - name: The package installs and runs
+        run: |
+          pip install .
+          oifmd validate board
+      - name: The site builds
+        run: python site/build.py

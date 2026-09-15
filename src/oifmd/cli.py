@@ -225,6 +225,7 @@ def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
     """Validate comments/ (spec 4.4): per-issue dirs and standalone files."""
     out: list[Finding] = []
     cdir = root / "comments"
+    seen_comment_ids: set[str] = set()
     if not cdir.is_dir():
         return out
     for sub in sorted(p for p in cdir.iterdir()):
@@ -234,6 +235,11 @@ def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
             if not re.fullmatch(rf"{ID_RE}\.md", sub.name):
                 out.append(Finding("error", str(sub), "standalone comment filename must be <id>.md"))
                 continue
+            if sub.stem in ids:
+                out.append(Finding("error", str(sub), f"id {sub.stem} is already an issue id"))
+            if sub.stem in seen_comment_ids:
+                out.append(Finding("error", str(sub), f"duplicate comment id {sub.stem}"))
+            seen_comment_ids.add(sub.stem)
             out += check_comment_file(sub, standalone=True)
             continue
         if not re.fullmatch(ID_RE, sub.name):
@@ -248,6 +254,11 @@ def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
             if not re.fullmatch(rf"{ID_RE}\.md", f.name):
                 out.append(Finding("error", str(f), "comment filename must be <id>.md with a 6-char id"))
                 continue
+            if f.stem in ids:
+                out.append(Finding("error", str(f), f"id {f.stem} is already an issue id"))
+            if f.stem in seen_comment_ids:
+                out.append(Finding("error", str(f), f"duplicate comment id {f.stem}"))
+            seen_comment_ids.add(f.stem)
             out += check_comment_file(f, standalone=False)
     return out
 

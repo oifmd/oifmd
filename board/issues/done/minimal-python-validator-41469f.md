@@ -13,4 +13,4 @@ A single-module validator with no dependency beyond PyYAML that checks the confo
 ## Acceptance Criteria
 
 - [x] `python -m oifmd validate examples/minimal` passes
-- [x] `python -m oifmd validate .` passes on this repository
+- [x] `python -m oifmd validate board` passes on this repository

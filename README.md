@@ -5,12 +5,12 @@ anything in it.**
 
 An issue is a Markdown file whose directory is its state. A comment is a
 create-only file recording who said what, when, about which issue or
-which path at which commit. Merge-safe by construction. Nothing
+which path at which commit. Concurrent comments never conflict. Nothing
 installed, and nothing written into the files being discussed.
 
 - **Spec:** [SPEC.md](https://github.com/oifmd/oifmd/blob/main/SPEC.md)
 - **Site:** https://oif.md
-- **Package:** `oifmd` (validator and converters)
+- **Package:** `oifmd` (validator)
 
 ## Sixty-second tour
 
@@ -120,8 +120,9 @@ oifmd new <board> todo "…"  # create an issue with a fresh id
 ## Why
 
 Every git-native tracker (Backlog.md, git-issues, beaver-backlog, beads)
-converged on Markdown plus frontmatter, one file per issue. None
-published the format separately from the tool. OIF is the format,
+converged on Markdown plus frontmatter, one file per issue. None published
+it as a versioned specification with a validator, so the format is only
+as portable as the tool that wrote it. OIF is the format,
 written down, with a validator, so issues outlive whichever tool wrote
 them and any agent can read them cold.
 

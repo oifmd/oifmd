@@ -22,8 +22,8 @@ drop shadows and blur that do not match the avatar.
 
 ## Notes for future generations
 
-- Always pass `--style none`. The default house style belongs to another
-  project and will not match these assets.
+- If the tool you use applies a house style by default, disable it. These
+  assets have their own palette and any other style will clash.
 - Ask for "no text or lettering anywhere" explicitly. Models add stray
   letterforms to anything that looks like a logo.
 - Generated sheets sometimes come back with soft shadows despite the

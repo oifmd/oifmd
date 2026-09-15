@@ -70,6 +70,13 @@
           }
         }
       }
+    },
+    "comments": {
+      "enum": [
+        "sidecar",
+        "inline"
+      ],
+      "default": "sidecar"
     }
   }
 }

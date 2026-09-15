@@ -186,9 +186,10 @@ def main() -> None:
 </header>
 
 <h2>Install the skill</h2>
-<pre><code>mkdir -p .claude/skills/oif &amp;&amp; curl -fsSL https://oif.md/skill.md -o .claude/skills/oif/SKILL.md</code></pre>
-<p>Nothing executes. It is a Markdown file, and it works the same in any
-harness that reads the Agent Skills convention. To check a board against
+<pre><code># any harness that reads the Agent Skills convention
+DIR=.claude/skills/oif      # or .agents/skills/oif, .cursor/skills/oif
+mkdir -p "$DIR" &amp;&amp; curl -fsSL https://oif.md/skill.md -o "$DIR/SKILL.md"</code></pre>
+<p>Nothing executes. It is a Markdown file. To check a board against
 the specification, <code>pip install oifmd</code> then
 <code>oifmd validate &lt;board&gt;</code>.</p>
 

@@ -30,4 +30,4 @@ that argument one level down.
 - [x] SPEC.md sections 1, 2, 4.3, 4.4, 6, 7, 8 and 9 reflect the chosen default
 - [x] The agent skill leads with the chosen form
 - [x] Validator checks both forms regardless of which is default
-- [ ] A merge test covering concurrent appends in the chosen form lives in the repository
+- [x] A merge test covering concurrent appends in the chosen form lives in the repository

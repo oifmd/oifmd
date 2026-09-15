@@ -30,9 +30,15 @@ the stale one.
 
 Independent of when this repository goes public.
 
+Supersedes an earlier duplicate of this ticket which asked for the same
+site and disagreed about what the root page should serve. The root page
+is the skill, not the README: an agent handed only the domain must be
+able to act without a second fetch.
+
 ## Acceptance Criteria
 
-- [ ] `https://oif.md/` returns the skill with the bootstrap block
-- [ ] `/skill.md` and `/SPEC.md` return raw markdown with a markdown content type
-- [ ] `/llms.txt` exists
-- [ ] Site content is generated from the repository, never hand-copied
+- [x] `https://oif.md/` returns the skill with the bootstrap block
+- [x] `/skill.md` and `/SPEC.md` return raw markdown with a markdown content type
+- [x] `/llms.txt` exists, alongside `/llms-full.txt`
+- [x] Site content is generated from the repository, never hand-copied
+- [ ] Pages enabled, DNS pointed, and the deployed site verified live

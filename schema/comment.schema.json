@@ -22,11 +22,7 @@
     },
     "resource": {
       "type": "string",
-      "pattern": "^oif:[a-z][a-z0-9]{1,15}/[0-9a-hjkmnp-tv-z]{6}/[0-9a-hjkmnp-tv-z]{6}$"
-    },
-    "in_reply_to": {
-      "type": "string",
-      "pattern": "^[0-9a-hjkmnp-tv-z]{6}$"
+      "pattern": "^oif:[a-z][a-z0-9]{1,15}/[0-9a-hjkmnp-tv-z]{6}(?:/[0-9a-hjkmnp-tv-z]{6})?$"
     },
     "about": {
       "type": "array",
