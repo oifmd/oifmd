@@ -1,12 +1,15 @@
 #!/usr/bin/env node
-console.log(`Open Issue Format (OIF) — issues as files.
+console.log(`Open Issue Format (OIF)
+Issues and review comments as files, in any git repository, about
+anything in it.
 
-The validator currently ships for Python:
+This package holds the npm name. The validator ships for Python:
 
     pip install oifmd
-    oifmd validate <board>
+    oifmd validate <board>      check a board against the spec
+    oifmd about <path>          what the board says about a file
 
-A JavaScript validator is planned; this package holds the name.
+A JavaScript validator is planned.
 
   Spec: https://oif.md/SPEC.md
   Repo: https://github.com/oifmd/oifmd
