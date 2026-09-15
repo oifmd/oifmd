@@ -50,7 +50,13 @@ def md_to_html(md: str) -> str:
         elif re.match(r"^\s*[-*] ", line):
             items = []
             while i < len(lines) and re.match(r"^\s*[-*] ", lines[i]):
-                items.append(inline(re.sub(r"^\s*[-*] ", "", lines[i]))); i += 1
+                text = re.sub(r"^\s*[-*] ", "", lines[i]); i += 1
+                # a wrapped bullet continues on indented lines; join them
+                while (i < len(lines) and lines[i].strip()
+                       and re.match(r"^\s{2,}\S", lines[i])
+                       and not re.match(r"^\s*[-*] ", lines[i])):
+                    text += " " + lines[i].strip(); i += 1
+                items.append(inline(text))
             out.append("<ul>" + "".join(f"<li>{x}</li>" for x in items) + "</ul>")
             continue
         elif line.startswith("|"):
@@ -167,8 +173,9 @@ def main() -> None:
     # raw files, served verbatim
     (OUT / "SPEC.md").write_text(spec)
     (OUT / "skill.md").write_text(skill)
-    for d in ("schema", "profiles"):
-        shutil.copytree(ROOT / d, OUT / d)
+    shutil.copytree(ROOT / "profiles", OUT / "profiles")
+    # schemas are served at the versioned path their own $id declares
+    shutil.copytree(ROOT / "schema", OUT / "schema" / "0.1")
     for img in ("oif-avatar-32.png", "oif-avatar-180.png", "oif-avatar-192.png",
                 "oif-avatar-512.png", "oif-header-1500x500.png"):
         shutil.copy(ROOT / "brand" / img, OUT / img)
@@ -224,10 +231,10 @@ board is also a conforming Open Knowledge Format bundle.
 
 ## Schemas
 
-- [board.md]({SITE}/schema/board.schema.json)
-- [issue]({SITE}/schema/issue.schema.json)
-- [column.md]({SITE}/schema/column.schema.json)
-- [comment]({SITE}/schema/comment.schema.json)
+- [board.md]({SITE}/schema/0.1/board.schema.json)
+- [issue]({SITE}/schema/0.1/issue.schema.json)
+- [column.md]({SITE}/schema/0.1/column.schema.json)
+- [comment]({SITE}/schema/0.1/comment.schema.json)
 """)
 
     (OUT / "llms-full.txt").write_text(

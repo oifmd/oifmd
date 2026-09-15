@@ -1,5 +1,23 @@
 # Changelog
 
+## oifmd 0.1.0.dev1 (package)
+
+The validator, not the specification. `0.1.0.dev0` accepted a board the
+specification forbids: an issue and a comment sharing an id. It also
+rendered a project page with broken links and no install instruction.
+
+- Ids are checked across issues and comments, not within each.
+- A reference token naming this board resolves, or it is an error.
+  `depends_on: [app-zzzzzz]` on board `app` previously passed.
+- `kinds` entries are checked against the board's own declarations.
+- Warnings where the specification asks for them: an `about` path that
+  names nothing at HEAD with no commit to resolve from, `resolution`
+  outside a complete column or holding prose, a board with no `key`.
+- Timestamps are checked against the published grammar, not merely for a
+  trailing offset.
+- Project metadata: keywords, classifiers, documentation and changelog
+  links, and a project page whose links work.
+
 ## 0.1 (draft)
 
 First public draft. A starting point rather than a finished standard;

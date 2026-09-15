@@ -1,6 +1,6 @@
 # Open Issue Format (OIF)
 
-![](brand/oif-header-1500x500.png)
+![Open Issue Format](https://oif.md/oif-header-1500x500.png)
 
 **Issues and review comments as files, in any git repository, about
 anything in it.**

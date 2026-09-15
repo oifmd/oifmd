@@ -239,16 +239,16 @@ external_ids:
 | `related`      | list of issue ref   | Undirected. |
 | `about`        | list of targets     | What this issue concerns, outside the board. See 3.4. |
 | `created`      | ISO 8601 datetime   | RECOMMENDED. MUST carry `Z` or a numeric offset. Git history is not reliable after import. |
+| `due`          | ISO 8601 date or datetime | A bare `YYYY-MM-DD` means end of that day in the board's own reckoning; a datetime MUST carry an offset. |
+| `resolution`   | string              | A short token, not a report: `fixed`, `duplicate`, `wontfix`, and so on. Prose explaining the outcome belongs in a comment or the body. Only meaningful in a `complete` column; elsewhere it says nothing and SHOULD be absent. |
+| `aliases`      | list of string      | Other names this issue answers to, e.g. legacy sequential keys. |
+| `external_ids` | map string→string   | Keys are system names (`github`, `jira`, …). |
 
 A note for implementers: a YAML parser yields a native date or datetime
 object for an unquoted timestamp, not a string. Consumers MUST accept
 both that and a quoted string, and SHOULD serialise back to an ISO 8601
 string with an explicit offset when writing JSON. The published schemas
 describe the JSON projection, so they specify strings.
-| `due`          | ISO 8601 date or datetime | A bare `YYYY-MM-DD` means end of that day in the board's own reckoning; a datetime MUST carry an offset. |
-| `resolution`   | string              | A short token, not a report: `fixed`, `duplicate`, `wontfix`, and so on. Prose explaining the outcome belongs in a comment or the body. Only meaningful in a `complete` column; elsewhere it says nothing and SHOULD be absent. |
-| `aliases`      | list of string      | Other names this issue answers to, e.g. legacy sequential keys. |
-| `external_ids` | map string→string   | Keys are system names (`github`, `jira`, …). |
 
 Reserved keys that MUST NOT appear in issue frontmatter, because the
 filesystem carries them: `id`, `status`, `state`, `column`.
@@ -589,7 +589,7 @@ The same reasoning produced random issue ids in 3.1. Anything appended
 to a shared file by independent writers needs coordination; anything
 created as its own file does not.
 
-## 7.3 Migrating an existing board
+### 7.3 Migrating an existing board
 
 Trackers being migrated from share a shape, and it maps onto this format
 without loss:

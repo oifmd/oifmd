@@ -330,9 +330,9 @@ def check_issue(issue: Issue, ids: set[str], key: str | None = None,
             out.append(Finding("error", p, f"{k} must be a list of issue references"))
             continue
         for r in v:
-            out.extend(_check_ref(p, k, r, ids))
+            out.extend(_check_ref(p, k, r, ids, key))
     if front.get("parent") is not None:
-        out.extend(_check_ref(p, "parent", front["parent"], ids))
+        out.extend(_check_ref(p, "parent", front["parent"], ids, key))
     ext = front.get("external_ids")
     if ext is not None and not (isinstance(ext, dict) and all(isinstance(v, str) for v in ext.values())):
         out.append(Finding("error", p, "external_ids must be a map of string to string"))
@@ -351,11 +351,14 @@ def check_issue(issue: Issue, ids: set[str], key: str | None = None,
     return out
 
 
-def _check_ref(p: str, k: str, r, ids: set[str]) -> list[Finding]:
+def _check_ref(p: str, k: str, r, ids: set[str], key: str | None = None) -> list[Finding]:
+    """Spec 5.1/8.6: a bare id, or a token whose key is this board's, must resolve."""
     if not isinstance(r, str) or not REF_RE.match(r):
         return [Finding("error", p, f"{k}: {r!r} is not an issue reference")]
     m = REF_RE.match(r)
-    if "-" not in r and m["id"] not in ids:
+    prefix = r.rsplit("-", 1)[0] if "-" in r else None
+    local = prefix is None or (key is not None and prefix == key)
+    if local and m["id"] not in ids:
         return [Finding("error", p, f"{k}: {r} does not resolve within this board")]
     return []
 

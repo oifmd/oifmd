@@ -270,7 +270,6 @@ extra frontmatter key.
 - no id is reused: not between two issues, two comments, or an issue and
   a comment
 - frontmatter is a block mapping, not collapsed onto one line
-- no other file on the board has the same id
 - frontmatter has `type: issue` and no `id`, `status`, `state` or `column`
 - `resource`, if present, ends with the filename's id
 - `## Comments`, if present, is the last level-2 section

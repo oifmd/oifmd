@@ -12,6 +12,6 @@ A portable SKILL.md that any coding agent can install to create, move, comment o
 
 ## Acceptance Criteria
 
-- [ ] Covers create, move, comment, close, and the sanity checks
-- [ ] Includes a shell one-liner for minting an id
+- [x] Covers create, move, comment, close, and the sanity checks
+- [x] Includes a shell one-liner for minting an id
 - [ ] Validated by running an agent through the minimal example end to end

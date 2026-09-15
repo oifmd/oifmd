@@ -4,4 +4,4 @@ title: Done
 description: Complete.
 ---
 
-Set `resolution` when it was not simply fixed.
+Set `resolution` to say how it ended: `fixed`, `duplicate`, `wontfix`.

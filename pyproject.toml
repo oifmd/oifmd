@@ -10,9 +10,19 @@ readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
+keywords = ["oif", "issues", "issue-tracker", "markdown", "frontmatter", "okf", "git", "agents"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Bug Tracking",
+  "Topic :: Text Processing :: Markup :: Markdown",
+]
 dependencies = ["pyyaml>=6"]
 
 [project.urls]
+Documentation = "https://oif.md/SPEC.md"
+Changelog = "https://github.com/oifmd/oifmd/blob/main/CHANGELOG.md"
 Homepage = "https://oif.md"
 Source = "https://github.com/oifmd/oifmd"
 
