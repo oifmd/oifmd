@@ -161,7 +161,7 @@ issues/<column>/<slug>-<id>.md
 - The id is the sole identity of an issue. Two files in one board with
   the same id are a validation error, regardless of slug or column.
 - Producers MUST NOT generate sequential ids for new issues. Sequential
-  identifiers such as `app-2753` are valid *aliases* (see 3.2) and are
+  identifiers such as `APP-2753` are valid *aliases* (see 3.2) and are
   how issues imported from other trackers keep their numbers.
 
 Rationale: random ids need no counter, no scan and no coordination, so

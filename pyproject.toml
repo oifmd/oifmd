@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oifmd"
-version = "0.1.0.dev0"
+version = "0.1.0.dev1"
 description = "Open Issue Format (OIF) validator and tools"
 readme = "README.md"
 license = { text = "Apache-2.0" }

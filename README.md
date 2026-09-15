@@ -1,14 +1,14 @@
 # Open Issue Format (OIF)
 
-**Issues and review comments as files, in any git repo, about anything
-in it.**
+**Issues and review comments as files, in any git repository, about
+anything in it.**
 
 An issue is a Markdown file whose directory is its state. A comment is a
 create-only file recording who said what, when, about which issue or
 which path at which commit. Merge-safe by construction. Nothing
 installed, and nothing written into the files being discussed.
 
-- **Spec:** [SPEC.md](SPEC.md) · version 0.1 (draft)
+- **Spec:** [SPEC.md](https://github.com/oifmd/oifmd/blob/main/SPEC.md)
 - **Site:** https://oif.md
 - **Package:** `oifmd` (validator and converters)
 
@@ -104,6 +104,19 @@ about:
 Checked against the billing code at this commit. Holds.
 ```
 
+## Install
+
+The format needs no tool. The validator is there when you want the
+conformance list in section 8 of the spec checked for you.
+
+```sh
+pip install oifmd
+
+oifmd validate <board>      # check a board against the spec
+oifmd about <path>          # what the board says about a file
+oifmd new <board> todo "…"  # create an issue with a fresh id
+```
+
 ## Why
 
 Every git-native tracker (Backlog.md, git-issues, beaver-backlog, beads)
@@ -127,15 +140,16 @@ Design rules that fall out of being agent-first and git-native:
 - **One comment is one file**, keyed by the issue's id. Two agents
   commenting at once write two different paths, so nothing conflicts and
   nothing is lost. Appending to a shared file does not survive concurrent
-  writers; see the changelog.
-- **Unknown keys are preserved.** Your tracker's extra fields round-trip.
+  writers; see SPEC.md section 7.1.
+- **Unknown keys pass through.** A conforming consumer never rejects
+  them and keeps them when it rewrites a file.
 - **Every column has a `column.md`.** It keeps empty columns in git and
   tells an arriving agent what belongs there and how to leave.
 - **The board declares its own vocabulary.** `board.md` lists the columns
   and, optionally, the `kinds` an issue may have and which kinds may
   contain which. Epic, story and task are one team's words, not the
   format's. Ready `board.md` files for Kanban, Scrum and Shape Up are in
-  [`profiles/`](profiles/).
+  [`profiles/`](https://github.com/oifmd/oifmd/blob/main/profiles).
 
 An OIF board is a conforming [Open Knowledge Format](https://okf.md)
 bundle: same substrate, same actor convention, `type: issue` on every
@@ -145,13 +159,10 @@ file.
 
 ## This repository
 
-The roadmap for OIF itself lives in [`board/`](board/), in OIF.
+The roadmap for OIF itself lives in [`board/`](https://github.com/oifmd/oifmd/blob/main/board), in OIF.
 GitHub Issues stays open for conversation; accepted work lands in
 `board/issues/` with the GitHub number kept in `external_ids`.
 
-## Status
-
-0.1 is a draft. Expect 0.x to move.
 
 ## License
 
