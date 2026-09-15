@@ -122,6 +122,8 @@ def load_board(root: Path) -> tuple[dict | None, list[Finding]]:
             findings.append(Finding("error", str(bm), f"duplicate column {n!r}"))
         names.append(n)
     front["_column_names"] = names
+    front["_complete"] = {str(c["name"]) for c in (front.get("columns") or [])
+                          if isinstance(c, dict) and c.get("complete")}
     if key is None:
         findings.append(Finding("warn", str(bm),
             "board.md has no key: records cannot be referenced by token and have no resource (spec 5.1)"))
@@ -288,7 +290,7 @@ def check_comments_dir(root: Path, ids: set[str], repo_root: Path | None = None)
 
 
 def check_issue(issue: Issue, ids: set[str], key: str | None = None,
-                repo_root: Path | None = None) -> list[Finding]:
+                repo_root: Path | None = None, complete: set[str] | None = None) -> list[Finding]:
     p = str(issue.path)
     out: list[Finding] = []
     front, body, err = split_frontmatter(issue.path.read_text(encoding="utf-8"))
@@ -303,6 +305,13 @@ def check_issue(issue: Issue, ids: set[str], key: str | None = None,
     elif isinstance(res, str) and not res.endswith("/" + issue.id):
         out.append(Finding("error", p, f"resource {res} does not end with this file's id {issue.id}"))
     out += check_about(p, front, required=False, repo_root=repo_root)
+    res = front.get("resolution")
+    if res is not None and complete is not None and issue.column not in complete:
+        out.append(Finding("warn", p,
+            f"resolution is set but {issue.column!r} is not a complete column (spec 3.2)"))
+    if isinstance(res, str) and ("\n" in res or len(res) > 40):
+        out.append(Finding("warn", p,
+            "resolution should be a short token; put prose in a comment or the body (spec 3.2)"))
     for k in ("kind", "description", "priority"):
         if k in front and not isinstance(front[k], str):
             out.append(Finding("error", p, f"{k} must be a string"))
@@ -385,7 +394,7 @@ def validate(root: Path) -> list[Finding]:
     key = board.get("key") if isinstance(board.get("key"), str) else None
     repo_root = find_repo_root(root.resolve())
     for it in issues:
-        findings += check_issue(it, ids, key, repo_root)
+        findings += check_issue(it, ids, key, repo_root, board.get("_complete"))
     findings += check_comments_dir(root, ids, repo_root)
     if board.get("_comments_mode") == "sidecar":
         for it in issues:

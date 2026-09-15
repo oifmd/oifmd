@@ -246,7 +246,7 @@ both that and a quoted string, and SHOULD serialise back to an ISO 8601
 string with an explicit offset when writing JSON. The published schemas
 describe the JSON projection, so they specify strings.
 | `due`          | ISO 8601 date or datetime | A bare `YYYY-MM-DD` means end of that day in the board's own reckoning; a datetime MUST carry an offset. |
-| `resolution`   | string              | Only meaningful in a `complete` column. Common: `fixed`, `duplicate`, `wontfix`. |
+| `resolution`   | string              | A short token, not a report: `fixed`, `duplicate`, `wontfix`, and so on. Prose explaining the outcome belongs in a comment or the body. Only meaningful in a `complete` column; elsewhere it says nothing and SHOULD be absent. |
 | `aliases`      | list of string      | Other names this issue answers to, e.g. legacy sequential keys. |
 | `external_ids` | map string→string   | Keys are system names (`github`, `jira`, …). |
 
@@ -589,6 +589,30 @@ The same reasoning produced random issue ids in 3.1. Anything appended
 to a shared file by independent writers needs coordination; anything
 created as its own file does not.
 
+## 7.3 Migrating an existing board
+
+Trackers being migrated from share a shape, and it maps onto this format
+without loss:
+
+| Source concept | OIF |
+|---|---|
+| Sequential key, e.g. `APP-38` | `aliases: [APP-38]`, and a fresh random id in the filename |
+| Per-issue changelog or history list | One comment file per entry (section 4.4) |
+| `status` or `column` field | The directory. Delete the field; it is reserved (section 3.2) |
+| The tracker's own issue URL or number | `external_ids`, e.g. `{github: acme/app#412}` |
+| A free-text closing report | A comment or a body section, not `resolution` |
+| Assignee, labels, priority | `assignees`, `tags`, `priority` |
+
+A history entry usually carries a timestamp, an actor and a description,
+which is exactly what a comment file requires: `at`, `by`, and the body.
+Anything else the source recorded, an event name for instance, rides
+along as an additional frontmatter key, because consumers preserve keys
+they do not recognise (section 3.2).
+
+Derive each new id however you like, but derive it deterministically
+from the source key if you intend to run the migration more than once;
+otherwise a second run produces a second set of files.
+
 ## 8. Conformance
 
 A conforming board:
@@ -598,7 +622,10 @@ A conforming board:
    declared column, and no directory under `issues/` that is not a
    declared column;
 3. has every issue file matching `^[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-hjkmnp-tv-z]{6}\.md$`;
-4. has no duplicate ids;
+4. has no duplicate ids. **Ids share one namespace across every record
+   on a board**: no two issues, no two comments, and no issue and
+   comment may carry the same id. This is what lets a comment's
+   `resource` never collide with an issue's (section 9.1);
 5. has frontmatter that parses as a YAML mapping, has `type: issue`, and
    contains none of `id`, `status`, `state`, `column`;
 6. has every `parent`, `depends_on` and `related` reference resolvable

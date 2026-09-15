@@ -173,9 +173,10 @@ Never write to the target, and never put a file beside it. Everything
 you write goes under the board root. That is what lets a board describe
 a repository nobody on the board owns.
 
-**Create.** Mint an id, write the file into the target column directory
-with `type: issue`, `title` and `created` set. If `board.md` has a `key`,
-set `resource: oif:<key>/<id>`. Keep every other key optional.
+**Create.** Mint an id, write the file into the target column directory.
+Only `type: issue` is required; set `title` and `created` too, because
+everything downstream reads better with them. If `board.md` has a `key`,
+set `resource: oif:<key>/<id>`.
 
 **Move.** `git mv issues/<from>/<file> issues/<to>/`. Nothing inside the
 file changes.
@@ -231,11 +232,44 @@ change on every move.
 On GitHub you can add a repository autolink with the prefix `<key>-` so
 every token in an issue, pull request or commit message becomes a link.
 
+## Writing frontmatter
+
+Write frontmatter as a block mapping, one key per line. Some YAML
+writers default to flow style and collapse it onto a single line:
+
+```yaml
+{type: comment, resource: 'oif:app/5weef2/e525r7', at: '2026-09-13T03:40:00Z', by: human:sam}
+```
+
+That is valid YAML and passes validation, and it destroys the reason the
+format is files in the first place. With PyYAML, pass
+`default_flow_style=False`. Short lists such as `tags: [auth, ui]` may
+stay inline.
+
+## Migrating an existing board
+
+Moving from another tracker, the mapping is:
+
+| Source | OIF |
+|---|---|
+| Sequential key, e.g. `APP-38` | `aliases: [APP-38]` plus a fresh random id |
+| History or changelog entries | One comment file each |
+| `status` field | The directory. Delete the field |
+| The tracker's issue URL or number | `external_ids` |
+| A closing report | A comment, not `resolution` |
+
+A history entry's timestamp, actor and text are exactly a comment file's
+`at`, `by` and body. Anything else the source recorded rides along as an
+extra frontmatter key.
+
 ## Sanity checks before you finish
 
 - filename matches `<slug>-<id>.md` with a six-character id
 - file is in a directory named in `board.md` `columns`
 - `kind` is declared in `board.md` `kinds`, when that list exists
+- no id is reused: not between two issues, two comments, or an issue and
+  a comment
+- frontmatter is a block mapping, not collapsed onto one line
 - no other file on the board has the same id
 - frontmatter has `type: issue` and no `id`, `status`, `state` or `column`
 - `resource`, if present, ends with the filename's id
