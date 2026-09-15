@@ -41,4 +41,4 @@ able to act without a second fetch.
 - [x] `/skill.md` and `/SPEC.md` return raw markdown with a markdown content type
 - [x] `/llms.txt` exists, alongside `/llms-full.txt`
 - [x] Site content is generated from the repository, never hand-copied
-- [ ] Pages enabled, DNS pointed, and the deployed site verified live
+- [x] Pages enabled, DNS pointed, and the deployed site verified live
