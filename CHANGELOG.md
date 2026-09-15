@@ -3,7 +3,15 @@
 ## 0.1 (draft)
 
 First public draft. A starting point rather than a finished standard;
-expect 0.x to move.
+expect 0.x to move, and expect 0.1 itself to keep moving until it is
+marked stable. The version in `board.md` stays `0.1` through that.
+
+One change since first publication tightened conformance rather than
+extending it: an id must now be unique across issues *and* comments,
+where previously a comment could reuse an issue's id. Section 11 says
+minor versions only add, so this is an exception, taken while the draft
+had no known implementers and worth naming rather than hiding. Anything
+comparable after 0.1 is marked stable will wait for 0.2.
 
 - **The format.** Directory as workflow state, filename as identity
   (slug plus a random six-character id), YAML frontmatter for
