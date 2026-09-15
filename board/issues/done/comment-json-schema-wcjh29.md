@@ -14,5 +14,5 @@ keys, `resource`, and free additional properties.
 
 ## Acceptance Criteria
 
-- [ ] `schema/comment.schema.json` exists and matches SPEC.md 4.4
+- [x] `schema/comment.schema.json` exists and matches SPEC.md 4.4
 - [ ] Referenced from the schema index or README
