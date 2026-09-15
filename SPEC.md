@@ -13,16 +13,19 @@ interpreted as described in RFC 2119.
 
 ## 1. Principle: the filesystem is the record
 
-| Layer       | Carries                      | Mechanism            |
-|-------------|------------------------------|----------------------|
-| Directory   | workflow state (the column)  | `git mv`             |
-| Filename    | identity (slug + id)         | fixed at creation    |
-| Frontmatter | attributes                   | YAML                 |
-| Body        | prose, criteria, comments    | CommonMark           |
+| Layer       | Carries                     | Mechanism                        |
+|-------------|-----------------------------|----------------------------------|
+| Directory   | workflow state (the column) | `git mv`                         |
+| Filename    | identity (slug + id)        | fixed at creation                |
+| Frontmatter | attributes                  | YAML                             |
+| Body        | prose and criteria          | CommonMark                       |
+| One comment | one comment                 | create-only file under `comments/`|
 
 Neither state nor identity appears in frontmatter. They therefore cannot
-disagree with the filesystem, and a state change is a single atomic
-rename rather than a read-modify-write.
+disagree with the filesystem. Changing state, minting identity and
+adding a comment are all single create-or-rename operations: none is a
+read-modify-write of a file another writer may hold. That property is
+what lets two agents work the same board on two branches and merge.
 
 ## 2. Board layout
 
@@ -30,13 +33,17 @@ rename rather than a read-modify-write.
 <board>/
 ├── board.md            the board: ordered columns, kinds, charter
 ├── index.md            OPTIONAL, OKF entry point, see section 9
+├── comments/           one directory per issue id, see section 4.4
+│   └── 7k2x9m/
+│       ├── k3n2wp.md
+│       └── q8v4jd.md
 └── issues/
     ├── backlog/
     │   └── column.md   the column: what belongs here, exit criteria
     ├── doing/
     │   └── column.md
     └── done/
-        └── column.md
+        └── fix-login-7k2x9m.md
 ```
 
 - `board.md` is REQUIRED. Its frontmatter declares the board; its body is
@@ -46,6 +53,10 @@ rename rather than a read-modify-write.
   MUST contain a `column.md` (section 2.2). Git does not track empty
   directories; the column file keeps an empty column present, and it is
   what an arriving agent reads first.
+- `comments/` is OPTIONAL and reserved. Each direct subdirectory is an
+  issue id and holds that issue's comment files (section 4.4). It sits
+  outside `issues/` because it is keyed by identity, not by state, so an
+  issue moving between columns leaves its comments untouched.
 - `column.md`, `index.md` and `log.md` are reserved names and are never
   issues. `index.md` and `log.md` are OPTIONAL in any directory and, when
   present, follow the Open Knowledge Format shape (section 9).
@@ -70,6 +81,7 @@ columns:              # REQUIRED. Ordered. Names are directory names.
   - name: archived
     complete: true
     hidden: true      # OPTIONAL. Consumers SHOULD hide by default.
+comments: sidecar     # OPTIONAL. `sidecar` (default) or `inline`.
 kinds:                # OPTIONAL. When absent, `kind` is free text.
   - name: epic
     contains: [story]
@@ -84,6 +96,11 @@ kinds:                # OPTIONAL. When absent, `kind` is free text.
 - A directory under `issues/` whose name is not a declared column is a
   validation error.
 - `key`, when present, MUST match `^[a-z][a-z0-9]{1,15}$`.
+- `comments` selects where comments are written: `sidecar` (section 4.4)
+  or `inline` (section 4.3). When absent the value is `sidecar`.
+  Producers MUST honour it when writing. Consumers MUST read both forms
+  regardless of its value, because a board may carry history in the form
+  it used previously.
 - `kinds`, when present, is the board's vocabulary for the issue `kind`
   key. Every issue's `kind` MUST then be a declared name, and an issue
   with a `parent` MUST have a kind listed in the parent's `contains`.
@@ -219,7 +236,12 @@ meaning. None is required and any other heading is allowed.
 - `## Plan` — intended approach.
 - `## Notes` — working notes.
 
-### 4.3 Comments
+### 4.3 Inline comments (opt-in form)
+
+Producers MUST NOT write inline comments unless `board.md` declares
+`comments: inline`. The default form is 4.4. Consumers MUST read this
+section when present whatever the board declares, because a board may
+hold history written under an earlier setting.
 
 If present, `## Comments` MUST be the last level-2 section in the file.
 Each comment is a level-3 heading matching this grammar, followed by
@@ -252,6 +274,57 @@ Comments are append-only. Producers MUST NOT edit or reorder existing
 comments; a correction is a new comment. Order in the file is the
 canonical order.
 
+Two branches each appending here do not merge safely. See 7.1.
+
+### 4.4 Comment files
+
+The default form. One comment is one file:
+
+```
+comments/<issue-id>/<comment-id>.md
+```
+
+- `<issue-id>` MUST be the id of an issue on the board. The directory is
+  created on first use and never moves, because the issue's id does not
+  change when the issue changes column.
+- `<comment-id>` is a fresh id generated exactly as an issue id is
+  (section 3.1): six characters of lowercase Crockford base32, random.
+
+```markdown
+---
+type: comment
+at: 2026-09-13T04:12:00Z
+by: human:sam
+kind: verdict
+result: changes_requested
+---
+
+Keep the strip for whitespace only. Add a test for the full punctuation set.
+```
+
+- `type` is REQUIRED and MUST be `comment`.
+- `at` is REQUIRED: an ISO 8601 datetime carrying `Z` or a numeric
+  offset.
+- `by` is REQUIRED: an actor as in 3.3.
+- Any further keys carry what the inline grammar puts in `key=value`
+  pairs. Unlike that grammar, values here are YAML and so may contain
+  spaces.
+- The body is the comment text, free CommonMark.
+
+Comment files are create-only. Producers MUST NOT edit or delete one; a
+correction is a new comment. Canonical order is by `at`, not by filename
+and not by directory listing order.
+
+To read an issue and its history with no tool:
+
+```sh
+cat issues/*/*-7k2x9m.md comments/7k2x9m/*.md
+```
+
+Two branches each adding a comment never conflict, because the filenames
+differ. This is the property that makes concurrent issue creation safe
+(section 3.1), applied one level down.
+
 ## 5. References
 
 An issue reference is:
@@ -276,8 +349,9 @@ In prose, commit messages and chat, use the same tokens.
 |-----------|-----------|
 | create    | write `issues/<column>/<slug>-<id>.md` with a fresh id |
 | move      | `git mv` to another column directory |
-| edit      | rewrite frontmatter or body, preserving unknown keys and existing comments |
-| comment   | append a comment block under `## Comments` |
+| read      | `cat issues/*/*-<id>.md comments/<id>/*.md` |
+| edit      | rewrite frontmatter or body, preserving unknown keys |
+| comment   | write `comments/<id>/<new-id>.md` (or, on an `inline` board, append under `## Comments`) |
 | close     | move to a `complete` column; optionally set `resolution` |
 | delete    | not an operation. Move to a hidden complete column instead |
 
@@ -287,8 +361,9 @@ In prose, commit messages and chat, use the same tokens.
   filenames therefore differ.
 - Two branches moving the same issue to different columns produce a git
   rename conflict. This is correct; it is a real disagreement.
-- Two branches appending comments to the same issue are **not safe** in
-  the inline form. See 7.1.
+- Two branches adding comments never conflict in the default form
+  (4.4), because each comment is its own file. In the opt-in inline
+  form they are **not safe**. See 7.1.
 
 ### 7.1 The concurrent-append hazard
 
@@ -309,42 +384,26 @@ both measured:
 Producers MUST NOT rely on `merge=union` for issue files. Earlier drafts
 of this specification recommended it; that recommendation was wrong.
 
-Boards that expect concurrent commenting SHOULD use the sidecar form
-(7.2). Boards that do not MAY use the inline form, understanding that a
-concurrent append needs manual resolution and that the resolver has to
-check bodies, not just headings.
+No arrangement of inline text avoids this. Git refines a conflict by
+diffing the two sides against each other, so any line the two comments
+happen to share is factored out as context, including blank lines and
+lines inside a fenced block.
 
-### 7.2 Sidecar comments
+This hazard is why comment files (4.4) are the default form. A board
+declaring `comments: inline` accepts that a concurrent append needs
+manual resolution, and that the resolver has to compare bodies rather
+than trusting a conflict that appears to involve only headings.
 
-In the sidecar form, comments are files keyed by the issue's id:
+### 7.2 Why comment files solve it
 
-```
-<board>/
-├── comments/
-│   └── 7k2x9m/
-│       ├── k3n2wp.md
-│       └── q8v4jd.md
-└── issues/doing/fix-login-7k2x9m.md
-```
+Comment files (4.4) cannot collide: each carries a fresh random id, so
+two branches write two different paths and git merges both with no
+overlap to diff. Nothing is read, modified and written back, so there is
+no window in which one writer's copy is stale.
 
-- The directory under `comments/` is the issue's id, which never
-  changes, so moving an issue between columns remains a single rename
-  and the comments do not move with it.
-- Each comment file is named `<id>.md` with a fresh id generated the
-  same way as an issue id (section 3.1).
-- Frontmatter carries `type: comment`, `at` (ISO 8601 datetime with an
-  offset) and `by` (an actor, section 3.3). Any further keys are the
-  `key=value` pairs of the inline grammar.
-- The body is the comment text.
-- Order is by `at`, not by filename.
-
-Two branches adding comments never conflict, because the filenames
-differ. This is the same property that makes concurrent issue creation
-safe, applied one level down.
-
-A board MAY carry both forms; consumers reading a full comment history
-MUST merge the inline section and the sidecar directory, ordered by
-timestamp.
+The same reasoning produced random issue ids in 3.1. Anything appended
+to a shared file by independent writers needs coordination; anything
+created as its own file does not.
 
 ## 8. Conformance
 
@@ -363,7 +422,15 @@ A conforming board:
 7. has `## Comments`, when present, as the last level-2 section, with
    every level-3 heading under it matching the comment grammar;
 8. when `board.md` declares `kinds`, has every issue `kind` declared and
-   every child's kind listed in its parent's `contains`.
+   every child's kind listed in its parent's `contains`;
+9. has every file under `comments/` at `comments/<issue-id>/<id>.md`,
+   where `<issue-id>` is an id present on the board and `<id>` matches
+   the id grammar, carrying `type: comment` with `at` and `by`. A
+   comment directory naming no existing issue is an error.
+
+A conforming board SHOULD NOT carry an inline `## Comments` section
+while declaring `comments: sidecar`; validators SHOULD warn rather than
+fail, since the section may be history from an earlier setting.
 
 A conforming consumer preserves unknown frontmatter keys, never edits
 existing comments, and never reads state or identity from frontmatter.
@@ -385,7 +452,10 @@ An OIF board is a conforming OKF v0.2 bundle when:
    under it carries frontmatter with a non-empty `type` (true for
    `board.md` and issues; any other Markdown placed under the board root
    must add a `type`);
-2. optionally, a root `index.md` carries `okf_version: "0.2"` to declare
+2. comment files (4.4) carry `type: comment`, so they are OKF concepts
+   too; they SHOULD carry
+   `resource: oif:<key>/<issue-id>/<comment-id>`;
+3. optionally, a root `index.md` carries `okf_version: "0.2"` to declare
    it. OKF index files carry no other frontmatter and their body is
    sections of bullet links to concepts, so board configuration MUST NOT
    be placed in an index file. A root index in that shape links

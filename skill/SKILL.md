@@ -80,6 +80,9 @@ Actors: `human:<id>`, `<agent>/<version>`, `process:<id>`.
 
 ## Operations
 
+**Read.** `cat issues/*/*-<id>.md comments/<id>/*.md` gets the issue and
+its full history in one command.
+
 **Create.** Mint an id, write the file into the target column directory
 with `type: issue`, `title` and `created` set. If `board.md` has a `key`,
 set `resource: oif:<key>/<id>`. Keep every other key optional.
@@ -87,20 +90,20 @@ set `resource: oif:<key>/<id>`. Keep every other key optional.
 **Move.** `git mv issues/<from>/<file> issues/<to>/`. Nothing inside the
 file changes.
 
-**Comment.** Append to the end of the file. If there is no
-`## Comments` heading yet, add it as the last level-2 section. Each
-comment is `### <ISO-8601 timestamp> <actor>` optionally followed by
-`key=value` pairs with no spaces in values, then a blank line, then the
-text. Never edit or reorder an existing comment; add a new one.
+**Comment.** Write a new file at `comments/<issue-id>/<new-id>.md`,
+minting the comment id the same way as an issue id. Frontmatter needs
+`type: comment`, `at` (ISO 8601 with an offset) and `by` (an actor);
+add any other keys you need. The body is the comment text. Never edit or
+delete an existing comment file; a correction is a new comment.
 
-If the board has a `comments/` directory, use the sidecar form instead:
-write `comments/<issue-id>/<new-id>.md` with frontmatter
-`type: comment`, `at` and `by`. This is the safe form when more than one
-agent may comment on the same issue at once.
+Only if `board.md` says `comments: inline`: append to the end of the
+issue file instead, under a final `## Comments` level-2 section, each
+comment a `### <ISO-8601 timestamp> <actor>` heading optionally followed
+by `key=value` pairs with no spaces in values.
 
 Do not set `merge=union` on issue files. When two branches each append a
-comment, git collapses lines the two bodies happen to share and one
-comment's body is lost with no conflict shown.
+comment inline, git collapses lines the two bodies happen to share and
+one comment's body is lost with no conflict shown.
 
 **Edit.** Change frontmatter or body as needed. Preserve keys you do not
 understand. Preserve existing comments verbatim.

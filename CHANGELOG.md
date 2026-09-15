@@ -7,8 +7,12 @@ expect 0.x to move.
 
 - **The format.** Directory as workflow state, filename as identity
   (slug plus a random six-character id), YAML frontmatter for
-  attributes, CommonMark body, append-only comments under a timestamped
-  heading grammar, references by id rather than path.
+  attributes, CommonMark body, references by id rather than path.
+- **Comments are files**, one per comment, at
+  `comments/<issue-id>/<comment-id>.md`. Keyed by identity rather than
+  path, so an issue changing column leaves its comments untouched. A
+  board may opt into the older inline form with `comments: inline` in
+  `board.md`; consumers read both.
 - **Board vocabulary.** `board.md` declares ordered columns and,
   optionally, the `kinds` an issue may have and which kinds may contain
   which. The specification names no hierarchy of its own. Ready boards
@@ -21,7 +25,7 @@ expect 0.x to move.
   schemas for each file type, and a portable agent skill that works in
   any harness reading the Agent Skills convention.
 
-### A note for anyone who saw a pre-release draft
+### Why comments are files, and a note for anyone who saw a draft
 
 An earlier draft recommended `.gitattributes` with `merge=union` on
 issue files. **Do not use it.** When two branches each append a comment

@@ -13,9 +13,3 @@ aliases:
 ---
 
 Run the test suite on every push.
-
-## Comments
-
-### 2026-09-02T10:15:00Z process:ci
-
-First green run.

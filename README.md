@@ -49,15 +49,28 @@ Submitting a correct password with `!` clears the form and shows
 - [x] Reproduce with a failing test
 - [ ] Fix without changing the hashing path
 
-## Comments
+```
 
-### 2026-09-13T03:40:00Z coder/1.4
+Comments are separate files, one per comment, keyed by the issue's id:
 
-Root cause: the form strips `!` before hashing.
+`comments/7k2x9m/k3n2wp.md`
 
-### 2026-09-13T04:12:00Z human:sam kind=verdict result=changes_requested
+```markdown
+---
+type: comment
+at: 2026-09-13T04:12:00Z
+by: human:sam
+kind: verdict
+result: changes_requested
+---
 
 Keep the strip for whitespace only.
+```
+
+Read an issue and its whole history with one command:
+
+```sh
+cat issues/*/*-7k2x9m.md comments/7k2x9m/*.md
 ```
 
 ## Why
@@ -76,8 +89,10 @@ Design rules that fall out of being agent-first and git-native:
   branches can create issues at once and merge with no counter, no
   scan, no renumbering. Sequential keys like `APP-2753` survive as
   aliases.
-- **Frontmatter carries attributes, the body carries prose.** Comments
-  are append-only headings with a one-line grammar.
+- **One comment is one file**, keyed by the issue's id. Two agents
+  commenting at once write two different paths, so nothing conflicts and
+  nothing is lost. Appending to a shared file does not survive concurrent
+  writers; see the changelog.
 - **Unknown keys are preserved.** Your tracker's extra fields round-trip.
 - **Every column has a `column.md`.** It keeps empty columns in git and
   tells an arriving agent what belongs there and how to leave.

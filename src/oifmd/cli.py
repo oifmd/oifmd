@@ -119,6 +119,10 @@ def load_board(root: Path) -> tuple[dict | None, list[Finding]]:
             findings.append(Finding("error", str(bm), f"duplicate column {n!r}"))
         names.append(n)
     front["_column_names"] = names
+    cmode = front.get("comments", "sidecar")
+    if cmode not in ("sidecar", "inline"):
+        findings.append(Finding("error", str(bm), "comments must be 'sidecar' or 'inline'"))
+    front["_comments_mode"] = cmode if cmode in ("sidecar", "inline") else "sidecar"
     kinds = front.get("kinds")
     if kinds is not None:
         if not isinstance(kinds, list) or not all(isinstance(k, dict) and "name" in k for k in kinds):
@@ -169,6 +173,46 @@ def scan_issues(root: Path, board: dict) -> tuple[list[Issue], list[Finding]]:
                 continue
             issues.append(Issue(f, col.name, m["slug"], m["id"]))
     return issues, findings
+
+
+def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
+    """Validate comments/<issue-id>/<comment-id>.md (spec 4.4)."""
+    out: list[Finding] = []
+    cdir = root / "comments"
+    if not cdir.is_dir():
+        return out
+    for sub in sorted(p for p in cdir.iterdir()):
+        if not sub.is_dir():
+            out.append(Finding("error", str(sub), "comments/ holds one directory per issue id"))
+            continue
+        if not re.fullmatch(ID_RE, sub.name):
+            out.append(Finding("error", str(sub), f"{sub.name!r} is not an issue id"))
+            continue
+        if sub.name not in ids:
+            out.append(Finding("error", str(sub), f"no issue with id {sub.name} on this board"))
+            continue
+        for f in sorted(sub.iterdir()):
+            if f.name in ("index.md", "log.md"):
+                continue
+            if not re.fullmatch(rf"{ID_RE}\.md", f.name):
+                out.append(Finding("error", str(f), "comment filename must be <id>.md with a 6-char id"))
+                continue
+            front, _, err = split_frontmatter(f.read_text(encoding="utf-8"))
+            if err:
+                out.append(Finding("error", str(f), err)); continue
+            if front.get("type") != "comment":
+                out.append(Finding("error", str(f), "comment must have type: comment"))
+            at = front.get("at")
+            if at is None:
+                out.append(Finding("error", str(f), "comment requires at"))
+            elif isinstance(at, datetime):
+                if at.tzinfo is None:
+                    out.append(Finding("error", str(f), "at must carry Z or a numeric offset"))
+            elif not (isinstance(at, str) and OFFSET_RE.search(at)):
+                out.append(Finding("error", str(f), "at must be ISO 8601 with Z or a numeric offset"))
+            if not isinstance(front.get("by"), str) or not front.get("by"):
+                out.append(Finding("error", str(f), "comment requires by (an actor)"))
+    return out
 
 
 def check_issue(issue: Issue, ids: set[str], key: str | None = None) -> list[Finding]:
@@ -267,6 +311,12 @@ def validate(root: Path) -> list[Finding]:
     key = board.get("key") if isinstance(board.get("key"), str) else None
     for it in issues:
         findings += check_issue(it, ids, key)
+    findings += check_comments_dir(root, ids)
+    if board.get("_comments_mode") == "sidecar":
+        for it in issues:
+            if "\n## Comments" in it.body or it.body.startswith("## Comments"):
+                findings.append(Finding("warn", str(it.path),
+                    "inline ## Comments on a board declaring comments: sidecar (spec 4.3)"))
     kinds = board.get("_kinds")
     if kinds is not None:
         by_id = {it.id: it for it in issues}
@@ -291,7 +341,8 @@ def cmd_validate(root: Path) -> int:
         print(f)
     errors = sum(1 for f in findings if f.level == "error")
     n = sum(1 for f in (root / "issues").rglob("*.md") if f.name not in RESERVED_FILES) if (root / "issues").is_dir() else 0
-    print(f"{root}: {n} issue file(s), {errors} error(s), {len(findings) - errors} warning(s)")
+    c = sum(1 for f in (root / "comments").rglob("*.md") if f.name not in RESERVED_FILES) if (root / "comments").is_dir() else 0
+    print(f"{root}: {n} issue file(s), {c} comment file(s), {errors} error(s), {len(findings) - errors} warning(s)")
     return 1 if errors else 0
 
 

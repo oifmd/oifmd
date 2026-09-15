@@ -26,29 +26,8 @@ that argument one level down.
 
 ## Acceptance Criteria
 
-- [ ] Decision recorded here with its reasoning
-- [ ] SPEC.md section 4.3 and 7 reflect the chosen default
-- [ ] The agent skill leads with the chosen form
-- [ ] Validator checks both forms regardless of which is default
+- [x] Decision recorded here with its reasoning
+- [x] SPEC.md sections 1, 2, 4.3, 4.4, 6, 7, 8 and 9 reflect the chosen default
+- [x] The agent skill leads with the chosen form
+- [x] Validator checks both forms regardless of which is default
 - [ ] A merge test covering concurrent appends in the chosen form lives in the repository
-
-## Comments
-
-### 2026-09-15T12:00:00+10:00 claude-code/2 kind=evidence
-
-Measured on git 2.x with two branches each appending a comment whose
-body contained the lines `Root cause identified.`, a blank line,
-`Steps:` and three list items.
-
-With `merge=union` the result carried both `###` headings adjacent,
-followed by a single copy of the shared body. No conflict was raised.
-One comment's body was gone.
-
-Without the union driver the merge conflicted, but the markers enclosed
-only the two heading lines; the shared body sat below them as common
-context. Resolving by keeping both headings reproduces the collapse, and
-the conflict presents as trivial.
-
-Hypothesis raised by a peer session reviewing the comment grammar; the
-measurement went further than the hypothesis, which predicted
-interleaving rather than loss.
