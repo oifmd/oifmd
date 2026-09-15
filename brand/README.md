@@ -10,6 +10,7 @@
 | `oif-avatar-32.png` | 32×32 | favicon |
 | `oif-avatar-400-circle-preview.png` | 400×400 | preview only, do not upload |
 | `oif-header-1500x500.png` | 1500×500 | X header, social banner |
+| `oif-social-1280x640.png` | 1280×640 | GitHub social preview, link cards |
 
 Upload the square avatar, not the circle preview. Platforms apply their
 own circular mask; the preview exists so you can check the mark survives
@@ -36,7 +37,23 @@ pixels shrinks `oif` until neither works.
 ```sh
 python3 src/make-avatar.py     # every avatar size from the wordmark
 python3 src/make-header.py     # crops the header source to 1500×500
+python3 src/make-social.py     # the 2:1 GitHub link card
 ```
+
+The social card is its own composition rather than a crop of the header,
+because GitHub's preview is 2:1 where a profile header is 3:1, and a
+crop would lose either the wordmark or the tagline.
+
+## Uploading
+
+Avatars and social previews cannot be set through the GitHub API. They
+are web-only:
+
+| What | Where | File |
+|---|---|---|
+| Organisation avatar | `github.com/organizations/<org>/settings/profile` | `oif-avatar-512.png` |
+| Repository link card | repository Settings, General, Social preview | `oif-social-1280x640.png` |
+| X profile and header | X profile editor | `oif-avatar-400.png`, `oif-header-1500x500.png` |
 
 The avatar is drawn directly, so it is exactly reproducible. The header
 was generated once from a text prompt and is only reframed here; the
