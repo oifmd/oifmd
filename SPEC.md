@@ -687,7 +687,24 @@ The stable identity is the id in the filename, published as the
 on `resource` before path. OIF proposes the same rule to OKF for any
 concept that moves or is renamed.
 
-## 10. Versioning
+## 10. Trademarks and independence
+
+The Open Issue Format is an independent specification. It is not
+affiliated with, endorsed by, or sponsored by Google or any other
+organisation.
+
+Section 9 describes compatibility with the Open Knowledge Format, which
+Google Cloud publishes. References to that specification here are
+descriptive: they say what this format is compatible with, in the sense
+that "compatible with" ordinarily carries. Open Knowledge Format, OKF
+and Google are the marks of their respective owners, and this
+specification claims no rights in them.
+
+Likewise the acronym OIF is used by others, including the Optical
+Internetworking Forum, a networking consortium unrelated to this work.
+Write "Open Issue Format (OIF)" on first mention.
+
+## 11. Versioning
 
 `board.md` declares the spec version in `oif`. Minor versions only add
 optional keys and conventions. A key that becomes reserved is announced

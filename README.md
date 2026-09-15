@@ -170,3 +170,7 @@ GitHub Issues stays open for conversation; accepted work lands in
 ## License
 
 Apache-2.0.
+
+Open Issue Format is an independent specification, not affiliated with
+or endorsed by Google. Open Knowledge Format, OKF and Google are marks
+of their respective owners. See SPEC.md section 10.
