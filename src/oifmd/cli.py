@@ -35,6 +35,7 @@ RESERVED_FILES = ("column.md", "index.md", "log.md")
 COMMIT_RE = re.compile(r"^[0-9a-f]{7,40}$")
 LIST_OF_STR = ("assignees", "tags", "aliases")
 OFFSET_RE = re.compile(r"(?:Z|[+-]\d{2}:?\d{2})$")
+TS_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$")
 RESOURCE_RE = re.compile(rf"^oif:[a-z][a-z0-9]{{1,15}}/{ID_RE}$")
 LIST_OF_REF = ("depends_on", "related")
 
@@ -131,6 +132,12 @@ def load_board(root: Path) -> tuple[dict | None, list[Finding]]:
             findings.append(Finding("error", str(bm), "kinds must be a list of {name, contains?}"))
         else:
             front["_kinds"] = {str(k["name"]): [str(c) for c in (k.get("contains") or [])] for k in kinds}
+            declared = set(front["_kinds"])
+            for name, contains in front["_kinds"].items():
+                for c in contains:
+                    if c not in declared:
+                        findings.append(Finding("error", str(bm),
+                            f"kind {name!r} contains undeclared kind {c!r}"))
     return front, findings
 
 
@@ -177,7 +184,7 @@ def scan_issues(root: Path, board: dict) -> tuple[list[Issue], list[Finding]]:
     return issues, findings
 
 
-def check_about(p: str, front: dict, required: bool) -> list[Finding]:
+def check_about(p: str, front: dict, required: bool, repo_root: Path | None = None) -> list[Finding]:
     """Validate the `about` key (spec 3.4)."""
     out: list[Finding] = []
     about = front.get("about")
@@ -196,10 +203,24 @@ def check_about(p: str, front: dict, required: bool) -> list[Finding]:
         c = e.get("commit")
         if c is not None and not (isinstance(c, str) and COMMIT_RE.match(c)):
             out.append(Finding("error", p, f"about commit {c!r} must be 7-40 hex characters"))
+        # spec 8: a path naming nothing now, with no commit to resolve it from,
+        # is a warning. Never an error: the target may live in another repository.
+        path = e.get("path")
+        if repo_root is not None and isinstance(path, str) and not e.get("repo") and c is None:
+            if not (repo_root / path).exists():
+                out.append(Finding("warn", p,
+                    f"about path {path!r} does not exist at HEAD and carries no commit to resolve it from"))
     return out
 
 
-def check_comment_file(f: Path, standalone: bool) -> list[Finding]:
+def find_repo_root(start: Path) -> Path | None:
+    for d in [start, *start.parents]:
+        if (d / ".git").exists():
+            return d
+    return None
+
+
+def check_comment_file(f: Path, standalone: bool, repo_root: Path | None = None) -> list[Finding]:
     out: list[Finding] = []
     p = str(f)
     front, _, err = split_frontmatter(f.read_text(encoding="utf-8"))
@@ -213,15 +234,15 @@ def check_comment_file(f: Path, standalone: bool) -> list[Finding]:
     elif isinstance(at, datetime):
         if at.tzinfo is None:
             out.append(Finding("error", p, "at must carry Z or a numeric offset"))
-    elif not (isinstance(at, str) and OFFSET_RE.search(at)):
-        out.append(Finding("error", p, "at must be ISO 8601 with Z or a numeric offset"))
+    elif not (isinstance(at, str) and TS_RE.match(at)):
+        out.append(Finding("error", p, "at must be an ISO 8601 extended-form datetime with Z or a numeric offset"))
     if not isinstance(front.get("by"), str) or not front.get("by"):
         out.append(Finding("error", p, "comment requires by (an actor)"))
-    out += check_about(p, front, required=standalone)
+    out += check_about(p, front, required=standalone, repo_root=repo_root)
     return out
 
 
-def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
+def check_comments_dir(root: Path, ids: set[str], repo_root: Path | None = None) -> list[Finding]:
     """Validate comments/ (spec 4.4): per-issue dirs and standalone files."""
     out: list[Finding] = []
     cdir = root / "comments"
@@ -240,7 +261,7 @@ def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
             if sub.stem in seen_comment_ids:
                 out.append(Finding("error", str(sub), f"duplicate comment id {sub.stem}"))
             seen_comment_ids.add(sub.stem)
-            out += check_comment_file(sub, standalone=True)
+            out += check_comment_file(sub, standalone=True, repo_root=repo_root)
             continue
         if not re.fullmatch(ID_RE, sub.name):
             out.append(Finding("error", str(sub), f"{sub.name!r} is not an issue id"))
@@ -259,11 +280,12 @@ def check_comments_dir(root: Path, ids: set[str]) -> list[Finding]:
             if f.stem in seen_comment_ids:
                 out.append(Finding("error", str(f), f"duplicate comment id {f.stem}"))
             seen_comment_ids.add(f.stem)
-            out += check_comment_file(f, standalone=False)
+            out += check_comment_file(f, standalone=False, repo_root=repo_root)
     return out
 
 
-def check_issue(issue: Issue, ids: set[str], key: str | None = None) -> list[Finding]:
+def check_issue(issue: Issue, ids: set[str], key: str | None = None,
+                repo_root: Path | None = None) -> list[Finding]:
     p = str(issue.path)
     out: list[Finding] = []
     front, body, err = split_frontmatter(issue.path.read_text(encoding="utf-8"))
@@ -277,7 +299,7 @@ def check_issue(issue: Issue, ids: set[str], key: str | None = None) -> list[Fin
         out.append(Finding("error", p, "resource must be oif:<key>/<id>"))
     elif isinstance(res, str) and not res.endswith("/" + issue.id):
         out.append(Finding("error", p, f"resource {res} does not end with this file's id {issue.id}"))
-    out += check_about(p, front, required=False)
+    out += check_about(p, front, required=False, repo_root=repo_root)
     for k in ("kind", "description", "priority"):
         if k in front and not isinstance(front[k], str):
             out.append(Finding("error", p, f"{k} must be a string"))
@@ -307,8 +329,8 @@ def check_issue(issue: Issue, ids: set[str], key: str | None = None) -> list[Fin
         if isinstance(created, datetime):
             if created.tzinfo is None:
                 out.append(Finding("error", p, "created must carry Z or a numeric offset"))
-        elif not (isinstance(created, str) and OFFSET_RE.search(created)):
-            out.append(Finding("error", p, "created must be an ISO 8601 datetime with Z or a numeric offset"))
+        elif not (isinstance(created, str) and TS_RE.match(created)):
+            out.append(Finding("error", p, "created must be an ISO 8601 extended-form datetime with Z or a numeric offset"))
     if "title" not in front:
         out.append(Finding("warn", p, "title is recommended"))
     if key and "resource" not in front:
@@ -358,9 +380,10 @@ def validate(root: Path) -> list[Finding]:
         seen[it.id] = it.path
     ids = set(seen)
     key = board.get("key") if isinstance(board.get("key"), str) else None
+    repo_root = find_repo_root(root.resolve())
     for it in issues:
-        findings += check_issue(it, ids, key)
-    findings += check_comments_dir(root, ids)
+        findings += check_issue(it, ids, key, repo_root)
+    findings += check_comments_dir(root, ids, repo_root)
     if board.get("_comments_mode") == "sidecar":
         for it in issues:
             if "\n## Comments" in it.body or it.body.startswith("## Comments"):

@@ -9,11 +9,18 @@ An OIF board is a directory of Markdown files. The directory an issue
 sits in is its status. The filename carries its identity. A record may
 be *about* anything in the repository. Spec: https://oif.md/SPEC.md
 
+A board is any directory holding `board.md` and `issues/`. Look for one
+at the repository root, then one level down, then under `board/` or
+`.oif/`. If there is none and you have been asked to start one, see
+"Start a board" below.
+
 **Before acting on a file, check what the board already says about it:**
 
 ```sh
 grep -rl -- 'path/to/file.md' <board>/
 ```
+
+Paths in `about` are relative to the repository root, not to the board.
 
 Someone may have filed that it is wrong, stale, or already being fixed.
 
@@ -102,7 +109,7 @@ issues/<column>/<slug>-<id>.md
 Mint an id with any of:
 
 ```sh
-tr -dc '0-9a-hjkmnp-tv-z' < /dev/urandom | head -c 6; echo
+LC_ALL=C tr -dc '0-9a-hjkmnp-tv-z' < /dev/urandom | head -c 6; echo
 python3 -c "import secrets;print(''.join(secrets.choice('0123456789abcdefghjkmnpqrstvwxyz') for _ in range(6)))"
 ```
 

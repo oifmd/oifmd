@@ -48,6 +48,25 @@ not from the target.
 
 ## 2. Board layout
 
+### 2.0 Where a board lives
+
+A board is any directory containing `board.md` and `issues/`. This
+specification writes that directory as `<board>`.
+
+- A repository MAY contain several boards. Nothing distinguishes one as
+  primary.
+- A board MAY sit at the repository root, or at any depth.
+- A consumer finds boards by looking for `board.md`. Searching for
+  `board.md` at the repository root, then one level down, then under a
+  conventional directory such as `board/` or `.oif/`, resolves the
+  common cases; no location is normative.
+- A board does not require a git repository. Git supplies history and
+  merge behaviour (section 7), and `about.commit` (section 3.4) has no
+  meaning without it, but a board on a plain filesystem is conforming.
+- Paths in `about` entries are relative to the **repository root** when
+  the board is in a repository, and to the board's parent directory when
+  it is not.
+
 ```
 <board>/
 ├── board.md            the board: ordered columns, kinds, charter
@@ -73,7 +92,8 @@ not from the target.
   directories; the column file keeps an empty column present, and it is
   what an arriving agent reads first.
 - `comments/` is OPTIONAL and reserved. Each direct subdirectory is an
-  issue id and holds that issue's comment files (section 4.4). It sits
+  issue id and holds that issue's comment files; each Markdown file
+  directly inside `comments/` is a standalone comment (section 4.4). It sits
   outside `issues/` because it is keyed by identity, not by state, so an
   issue moving between columns leaves its comments untouched.
 - `column.md`, `index.md` and `log.md` are reserved names and are never
@@ -206,7 +226,7 @@ external_ids:
 | `type`         | string              | REQUIRED. MUST be `issue`. Lets a file identify itself when read alone, and satisfies OKF. |
 | `resource`     | URI                 | RECOMMENDED. `oif:<key>/<id>`. The stable identity for consumers that key on path. See 5 and 9. |
 | `title`        | string              | RECOMMENDED. Consumers fall back to the slug. |
-| `description`  | string              | One sentence. The body is the full description. |
+| `description`  | string              | A one-sentence summary, for listings and for OKF consumers. Distinct from the body's opening prose (section 4.1), which is the full description. Neither is derived from the other. |
 | `kind`         | string              | Free. Common: `task`, `bug`, `feature`, `epic`. |
 | `priority`     | string              | Free. Common: `critical`, `high`, `medium`, `low`. |
 | `assignees`    | list of actor       | See 3.3. |
@@ -223,7 +243,7 @@ object for an unquoted timestamp, not a string. Consumers MUST accept
 both that and a quoted string, and SHOULD serialise back to an ISO 8601
 string with an explicit offset when writing JSON. The published schemas
 describe the JSON projection, so they specify strings.
-| `due`          | ISO 8601 date/time  | |
+| `due`          | ISO 8601 date or datetime | A bare `YYYY-MM-DD` means end of that day in the board's own reckoning; a datetime MUST carry an offset. |
 | `resolution`   | string              | Only meaningful in a `complete` column. Common: `fixed`, `duplicate`, `wontfix`. |
 | `aliases`      | list of string      | Other names this issue answers to, e.g. legacy sequential keys. |
 | `external_ids` | map string→string   | Keys are system names (`github`, `jira`, …). |
@@ -244,6 +264,20 @@ convention follows the Open Knowledge Format:
 - `process:<id>` — automation, e.g. `process:ci`
 
 A bare string is permitted and means "kind unspecified".
+
+Formally an actor matches:
+
+```
+actor    = human / agent / process / bare
+human    = "human:" 1*idchar
+process  = "process:" 1*idchar
+agent    = 1*idchar "/" 1*VCHAR-without-space
+bare     = 1*idchar
+idchar   = ALPHA / DIGIT / "-" / "_" / "." / "@"
+```
+
+Consumers MUST NOT reject an actor they cannot classify; an unrecognised
+prefix is a bare actor.
 
 ### 3.4 Targets
 
@@ -311,7 +345,16 @@ free text up to the next level-3 heading or end of file:
 ### <timestamp> <actor>[ <key>=<value>]*
 ```
 
-- `<timestamp>` is ISO 8601 with a `Z` or numeric offset.
+- `<timestamp>` is an ISO 8601 datetime in **extended** form, carrying a
+  `Z` or a numeric offset, matching:
+
+  ```
+  \d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})
+  ```
+
+  Basic form (`20260913T031000Z`) is valid ISO 8601 but is NOT accepted
+  here, because the heading grammar splits on spaces and a single
+  published form keeps parsers interchangeable.
 - `<actor>` is as in 3.3.
 - `<key>` matches `^[a-z][a-z0-9_]*$`; `<value>` matches
   `^[A-Za-z0-9_.:/@-]+$`. No spaces, no quoting in 0.1.
@@ -425,7 +468,9 @@ An issue reference is:
 
 - the bare id, e.g. `7k2x9m`, when referring within the same board;
 - `<key>-<id>`, e.g. `app-7k2x9m`, when referring across boards, where
-  `<key>` is the target board's `key`.
+  `<key>` is the target board's `key`. A prefixed reference whose `<key>`
+  equals this board's own `key` refers to this board, and resolves
+  locally.
 
 References MUST NOT be file paths, because paths change on every move.
 Consumers resolve a reference by globbing `issues/*/*-<id>.md`.
@@ -558,9 +603,12 @@ target may live in a repository the board does not contain.
 
 Producers MUST NOT write outside the board root (section 1.1).
 
-A conforming board SHOULD NOT carry an inline `## Comments` section
-while declaring `comments: sidecar`; validators SHOULD warn rather than
-fail, since the section may be history from an earlier setting.
+Producers MUST NOT write an inline comment to a board that does not
+declare `comments: inline` (section 4.3). A board may nonetheless carry
+inline comments written under an earlier setting, so that is a property
+of the writer, not of the board: validators SHOULD warn when an inline
+section appears on a board declaring `comments: sidecar`, and MUST NOT
+fail on it.
 
 A conforming consumer preserves unknown frontmatter keys, never edits
 existing comments, and never reads state or identity from frontmatter.

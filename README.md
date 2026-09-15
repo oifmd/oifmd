@@ -1,5 +1,7 @@
 # Open Issue Format (OIF)
 
+![](brand/oif-header-1500x500.png)
+
 **Issues and review comments as files, in any git repository, about
 anything in it.**
 
@@ -155,8 +157,8 @@ Design rules that fall out of being agent-first and git-native:
 An OIF board is a conforming [Open Knowledge Format](https://okf.md)
 bundle: same substrate, same actor convention, `type: issue` on every
 file. The one deliberate divergence, identity by id rather than by path,
-is spelled out in SPEC.md section 9. Trackers are platforms, OIF is the
-file.
+is spelled out in SPEC.md section 9. A tracker is a service you log into; OIF is a
+directory you already have.
 
 ## This repository
 
