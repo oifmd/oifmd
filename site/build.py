@@ -116,8 +116,15 @@ h2{margin:2.6rem 0 .8rem;font-size:1.3rem;border-bottom:1px solid var(--rule);pa
 h3{margin:1.8rem 0 .5rem;font-size:1.05rem}
 code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.88em;
  background:#efe9d8;padding:.1em .35em;border-radius:3px}
-pre{background:#efe9d8;padding:.9rem 1.1rem;border-radius:6px;overflow-x:auto;border:1px solid var(--rule)}
-pre code{background:none;padding:0;font-size:.85rem;line-height:1.55}
+pre{background:#efe9d8;padding:.9rem 1.1rem;border-radius:6px;border:1px solid var(--rule);
+ white-space:pre-wrap;overflow-wrap:anywhere;position:relative}
+pre code{background:none;padding:0;font-size:.85rem;line-height:1.55;
+ display:block;text-indent:-1.6rem;padding-left:1.6rem}
+pre button.copy{position:absolute;top:.4rem;right:.4rem;font:inherit;font-size:.72rem;
+ line-height:1;padding:.3rem .5rem;border:1px solid var(--rule);border-radius:4px;
+ background:var(--bg);color:var(--mute);cursor:pointer;opacity:.5;transition:opacity .12s}
+pre:hover button.copy,pre button.copy:focus{opacity:1}
+pre button.copy[data-done]{color:#3f7d3f;border-color:#3f7d3f;opacity:1}
 table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.93rem}
 th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
 th{font-weight:600}
@@ -131,6 +138,25 @@ footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--rule);
  .btn:hover{background:var(--ink);color:var(--bg)}
  a{color:var(--amber)}
 }
+"""
+
+
+SCRIPT = """
+<script>
+// Copy buttons, added only when the browser can copy. No dependencies, and the
+// page reads exactly the same with JavaScript turned off.
+if (navigator.clipboard) for (const pre of document.querySelectorAll('pre')) {
+  const b = document.createElement('button');
+  b.className = 'copy'; b.type = 'button'; b.textContent = 'copy';
+  b.setAttribute('aria-label', 'Copy to clipboard');
+  b.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(pre.querySelector('code').textContent);
+    b.textContent = 'copied'; b.dataset.done = '1';
+    setTimeout(() => { b.textContent = 'copy'; delete b.dataset.done; }, 1400);
+  });
+  pre.appendChild(b);
+}
+</script>
 """
 
 
@@ -156,6 +182,7 @@ Apache-2.0 &middot; <a href="https://github.com/oifmd/oifmd">github.com/oifmd/oi
 &middot; <a href="/llms.txt">llms.txt</a>
 </footer>
 </div>
+{SCRIPT}
 </html>
 """
 
@@ -198,14 +225,15 @@ def main() -> None:
 <p><strong>Most agents</strong> — Codex, Cursor, OpenCode, VS Code,
 Gemini CLI, Copilot and others reading the
 <a href="https://agentskills.io">Agent Skills</a> convention:</p>
-<pre><code>mkdir -p .agents/skills/oif &amp;&amp; curl -fsSL https://oif.md/skill.md -o .agents/skills/oif/SKILL.md</code></pre>
+<pre><code>curl -fsSL --create-dirs -o .agents/skills/oif/SKILL.md https://oif.md/skill.md</code></pre>
 
 <p><strong>Claude Code</strong>, which reads its own directory:</p>
-<pre><code>mkdir -p .claude/skills/oif &amp;&amp; curl -fsSL https://oif.md/skill.md -o .claude/skills/oif/SKILL.md</code></pre>
+<pre><code>curl -fsSL --create-dirs -o .claude/skills/oif/SKILL.md https://oif.md/skill.md</code></pre>
 
 <p><strong>Windows PowerShell</strong>, swapping the path for whichever
 directory your agent reads:</p>
-<pre><code>md -Force .agents\\skills\\oif; iwr https://oif.md/skill.md -OutFile .agents\\skills\\oif\\SKILL.md</code></pre>
+<pre><code>md -Force .agents\\skills\\oif
+iwr https://oif.md/skill.md -OutFile .agents\\skills\\oif\\SKILL.md</code></pre>
 
 <p><strong>To update</strong>, run the same line again; it overwrites.
 <strong>To remove</strong>, delete the folder. Add it to

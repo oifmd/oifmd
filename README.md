@@ -114,13 +114,13 @@ The format needs no tool. Two optional things help.
 Most agents read the [Agent Skills](https://agentskills.io) convention:
 
 ```sh
-mkdir -p .agents/skills/oif && curl -fsSL https://oif.md/skill.md -o .agents/skills/oif/SKILL.md
+curl -fsSL --create-dirs -o .agents/skills/oif/SKILL.md https://oif.md/skill.md
 ```
 
 Claude Code reads its own directory instead:
 
 ```sh
-mkdir -p .claude/skills/oif && curl -fsSL https://oif.md/skill.md -o .claude/skills/oif/SKILL.md
+curl -fsSL --create-dirs -o .claude/skills/oif/SKILL.md https://oif.md/skill.md
 ```
 
 Run the same line again to update; delete the folder to remove.
