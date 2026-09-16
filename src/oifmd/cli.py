@@ -26,6 +26,11 @@ FILENAME_RE = re.compile(rf"^(?P<slug>{SLUG_RE})-(?P<id>{ID_RE})\.md$")
 COLUMN_RE = re.compile(r"^[a-z0-9]+(?:[_-][a-z0-9]+)*$")
 KEY_RE = re.compile(r"^[a-z][a-z0-9]{1,15}$")
 REF_RE = re.compile(rf"^(?:[a-z][a-z0-9]{{1,15}}-)?(?P<id>{ID_RE})$")
+# Prose tokens may carry the slug: <key>-<slug>-<id>. Only key and id resolve
+# (spec 5.1). Kept separate from REF_RE, which governs frontmatter values.
+TOKEN_RE = re.compile(
+    rf"(?<![a-z0-9-])(?P<key>[a-z][a-z0-9]{{1,15}})"
+    rf"(?:-(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*))?-(?P<id>{ID_RE})(?![a-z0-9-])")
 COMMENT_RE = re.compile(
     r"^### (?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2}))"
     r" (?P<actor>\S+)(?P<kv>(?: [a-z][a-z0-9_]*=[A-Za-z0-9_.:/@-]+)*)\s*$"

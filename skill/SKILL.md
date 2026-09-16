@@ -215,52 +215,20 @@ understand. Preserve existing comments verbatim.
 
 ## References
 
-Refer to a record in prose, commit messages and chat as `<key>-<id>`,
-using the board's `key` from `board.md`: `app-7k2x9m`. Use that form for
-records on this board too, not only across boards.
+Refer to a record as `<key>-` followed by its current filename stem:
+`app-encryption-disabled-unexpectedly-7k2x9m`. Use the short
+`<key>-<id>` form only when the sentence already names the issue, or
+when only tools will read it. Never a bare id, and never a path.
 
-Do not write a bare id in prose. One id in 64 is all hexadecimal
-characters and reads as an abbreviated commit hash, and a bare id gives
-a reader nothing to recognise.
+The `<key>` comes from `board.md`. Use it even for records on the board
+you are working in, so a reader who does not know which board is meant
+still does.
 
-Inside the frontmatter keys `parent`, `depends_on` and `related` the
-bare id is fine, because the key name already says what the value is.
+Only the key and the trailing id resolve a reference. The slug is there
+for the reader, so a reference whose slug has since changed still works
+and simply describes the record by its old name.
 
-Find a record with `ls issues/*/*-7k2x9m.md`. Never link by path; paths
-change on every move.
-
-On GitHub you can add a repository autolink with the prefix `<key>-` so
-every token in an issue, pull request or commit message becomes a link.
-
-## Writing frontmatter
-
-Write frontmatter as a block mapping, one key per line. Some YAML
-writers default to flow style and collapse it onto a single line:
-
-```yaml
-{type: comment, resource: 'oif:app/5weef2/e525r7', at: '2026-09-13T03:40:00Z', by: human:sam}
-```
-
-That is valid YAML and passes validation, and it destroys the reason the
-format is files in the first place. With PyYAML, pass
-`default_flow_style=False`. Short lists such as `tags: [auth, ui]` may
-stay inline.
-
-## Migrating an existing board
-
-Moving from another tracker, the mapping is:
-
-| Source | OIF |
-|---|---|
-| Sequential key, e.g. `APP-38` | `aliases: [APP-38]` plus a fresh random id |
-| History or changelog entries | One comment file each |
-| `status` field | The directory. Delete the field |
-| The tracker's issue URL or number | `external_ids` |
-| A closing report | A comment, not `resolution` |
-
-A history entry's timestamp, actor and text are exactly a comment file's
-`at`, `by` and body. Anything else the source recorded rides along as an
-extra frontmatter key.
+Find a record with `ls issues/*/*-7k2x9m.md`.
 
 ## Sanity checks before you finish
 

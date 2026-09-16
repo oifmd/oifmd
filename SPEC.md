@@ -466,16 +466,41 @@ differ. This is the property that makes concurrent issue creation safe
 
 ### 5.1 Referring to a record
 
-A reference token is `<key>-<id>`, e.g. `app-7k2x9m`, where `<key>` is
-the target board's `key` (section 2.1). Use this token in prose, commit
-messages, chat, and anywhere else a reader may not know which board is
-meant. A token whose `<key>` is this board's own key refers to this
-board.
+A reference token is `<key>-<id>` or `<key>-<slug>-<id>`, where `<key>`
+is the target board's `key` (section 2.1), `<id>` is the record's id
+(section 3.1) and `<slug>`, when present, is the slug of the record's
+filename at the time of writing: `app-7k2x9m`,
+`app-encryption-disabled-unexpectedly-7k2x9m`. The key is always first
+and the id always last.
 
-Inside the frontmatter keys `parent`, `depends_on` and `related`, the
-bare id, e.g. `7k2x9m`, MAY be used for an issue on the same board; the
-key name identifies the value as an issue reference. Both forms are
-accepted there.
+Use a token in prose, commit messages, chat, and anywhere a reader may
+not know which board is meant, including on the board being referenced.
+Writers SHOULD use the slug-bearing form where a human will read the
+text without the title beside it. The short form is sufficient where the
+title is already stated or only tools will read it. Readers MUST accept
+both.
+
+A token resolves on `<key>` and `<id>` alone. The slug is advisory:
+consumers MUST NOT use it to resolve, compare or reject a reference, and
+a slug that no longer matches the filename does not invalidate the
+reference. A tool MAY report the mismatch as a warning.
+
+A token matches:
+
+```
+^[a-z][a-z0-9]{1,15}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?-[0-9a-hjkmnp-tv-z]{6}$
+```
+
+and MUST be bounded on both sides by the start or end of the text or by
+a character outside `[a-z0-9-]`. Because a key contains no hyphen and an
+id is exactly six characters, the first segment is always the key and
+the last always the id. So `login-7k2x9m` refers to a board keyed
+`login`, never to a one-word slug on the current board. Tools MUST NOT
+extract tokens from file paths.
+
+Inside the frontmatter keys `parent`, `depends_on` and `related` the
+value is the bare id, e.g. `7k2x9m`, for a record on the same board, or
+`<key>-<id>` for any board. The slug form is not used there.
 
 The bare id MUST NOT be used as a reference in prose. One id in 64 is
 made only of hexadecimal characters and is indistinguishable from an
@@ -486,20 +511,21 @@ A board with no `key` cannot be referenced by token and has no
 `resource`; `key` is therefore RECOMMENDED.
 
 References MUST NOT be file paths, because paths change on every move.
-Consumers resolve a reference by globbing `issues/*/*-<id>.md`. A slug
-may end in a word that matches the key grammar, so tools MUST NOT
-extract tokens from paths or from text preceded by `-`, `/` or an
-alphanumeric.
+Consumers resolve a reference by globbing `issues/*/*-<id>.md`.
 
-The URI form of a reference is `oif:<key>/<id>`, which is the value of
-the issue's `resource` key and of `about.resource` (section 3.4). Token
-and URI convert mechanically. A board publisher MAY make the URI
-resolvable over HTTPS, e.g. `https://oif.md/<key>/<id>`.
+The URI form is `oif:<key>/<id>`, the value of the issue's `resource`
+key and of `about.resource` (section 3.4). The URI carries no slug.
+Token and URI convert mechanically. A board publisher MAY make the URI
+resolvable over HTTPS, e.g. `https://oif.md/<key>/<id>`, and SHOULD also
+accept `https://oif.md/<key>/<slug>-<id>` by ignoring the slug.
 
-A repository host that supports configurable autolinks (GitHub does,
-across issues, pull requests and commit messages) can be given the
-prefix `<key>-` so that every token renders as a link; one prefix per
-referenced board.
+A repository host with configurable autolinks can be given the prefix
+`<key>-`, one prefix per referenced board, so that tokens render as
+links. Where the host's suffix matcher accepts hyphens both forms link
+as one unit and the target receives everything after the prefix, so the
+target SHOULD resolve on the trailing id. Note that this is a paid
+feature on some hosts, GitHub among them, so a specification MUST NOT
+depend on it.
 
 ### 5.2 Finding records about a target
 
