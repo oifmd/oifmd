@@ -481,11 +481,13 @@ title is already stated or only tools will read it. Readers MUST accept
 both.
 
 A token resolves on `<key>` and `<id>` alone. The slug is advisory:
-consumers MUST NOT use it to resolve, compare or reject a reference, and
-a slug that no longer matches the filename does not invalidate the
-reference. A tool MAY report the mismatch as a warning, and a validator
-SHOULD, since a stale slug is a reader being misled rather than a
-machine being broken.
+consumers MUST NOT use it to resolve, compare or reject a reference.
+
+A slug that no longer matches the filename is tolerated, not an error
+and not a warning. Searching for a record MUST discard the slug and
+match on the id, so a renamed record is still found by every reference
+ever written to it. A prose reference is a snapshot of how the record
+read when the sentence was written, and it stays legible as that.
 
 A token matches:
 

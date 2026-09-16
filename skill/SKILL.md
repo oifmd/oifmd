@@ -224,9 +224,10 @@ The `<key>` comes from `board.md`. Use it even for records on the board
 you are working in, so a reader who does not know which board is meant
 still does.
 
-Only the key and the trailing id resolve a reference. The slug is there
-for the reader, so a reference whose slug has since changed still works
-and simply describes the record by its old name.
+Only the key and the trailing id resolve a reference. When searching,
+drop the slug and match the id, so a renamed record is still found by
+every reference ever written to it. A slug that has since changed is
+simply how the record read at the time, and needs no correcting.
 
 Find a record with `ls issues/*/*-7k2x9m.md`.
 

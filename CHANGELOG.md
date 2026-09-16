@@ -56,7 +56,8 @@ comparable after 0.1 is marked stable will wait for 0.2.
   which. The specification names no hierarchy of its own. Ready boards
   for Kanban, Scrum and Shape Up ship in `profiles/`.
 - Validators check prose tokens naming their own board: an unresolvable
-  one is an error, a stale slug a warning.
+  id is an error. A stale slug is not, because searching discards the
+  slug and matches the id.
 - **A reference may carry the slug**: `app-7k2x9m` or
   `app-encryption-disabled-unexpectedly-7k2x9m`. Only the key and the
   trailing id resolve it; the slug is for the reader and may go stale
