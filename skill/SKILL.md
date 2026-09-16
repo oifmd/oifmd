@@ -215,10 +215,20 @@ understand. Preserve existing comments verbatim.
 
 ## References
 
-Refer to a record as `<key>-` followed by its current filename stem:
-`app-encryption-disabled-unexpectedly-7k2x9m`. Use the short
-`<key>-<id>` form only when the sentence already names the issue, or
-when only tools will read it. Never a bare id, and never a path.
+Two forms, and the choice is about who reads the sentence.
+
+**Long, `<key>-<slug>-<id>`** — the record's current filename stem with
+the board key in front: `app-encryption-disabled-unexpectedly-7k2x9m`.
+Use it whenever a human might read the sentence without the issue's
+title beside it: commit messages, chat, comments, anything you write to
+explain yourself. A reader should not have to look a reference up to
+know roughly what it is.
+
+**Short, `<key>-<id>`** — `app-7k2x9m`. Use it when the sentence already
+names the issue, when you are repeating a reference you just wrote in
+full, or when only tools will read it.
+
+Never a bare id, and never a path.
 
 The `<key>` comes from `board.md`. Use it even for records on the board
 you are working in, so a reader who does not know which board is meant

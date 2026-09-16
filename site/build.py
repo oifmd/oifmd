@@ -193,12 +193,27 @@ def main() -> None:
 </header>
 
 <h2>Install the skill</h2>
-<pre><code># any harness that reads the Agent Skills convention
-DIR=.claude/skills/oif      # or .agents/skills/oif, .cursor/skills/oif
-mkdir -p "$DIR" &amp;&amp; curl -fsSL https://oif.md/skill.md -o "$DIR/SKILL.md"</code></pre>
-<p>Nothing executes. It is a Markdown file. To check a board against
-the specification, <code>pip install oifmd</code> then
-<code>oifmd validate &lt;board&gt;</code>.</p>
+<p>One file. Nothing executes, nothing is installed.</p>
+
+<p><strong>Most agents</strong> — Codex, Cursor, OpenCode, VS Code,
+Gemini CLI, Copilot and others reading the
+<a href="https://agentskills.io">Agent Skills</a> convention:</p>
+<pre><code>mkdir -p .agents/skills/oif &amp;&amp; curl -fsSL https://oif.md/skill.md -o .agents/skills/oif/SKILL.md</code></pre>
+
+<p><strong>Claude Code</strong>, which reads its own directory:</p>
+<pre><code>mkdir -p .claude/skills/oif &amp;&amp; curl -fsSL https://oif.md/skill.md -o .claude/skills/oif/SKILL.md</code></pre>
+
+<p><strong>Windows PowerShell</strong>, swapping the path for whichever
+directory your agent reads:</p>
+<pre><code>md -Force .agents\\skills\\oif; iwr https://oif.md/skill.md -OutFile .agents\\skills\\oif\\SKILL.md</code></pre>
+
+<p><strong>To update</strong>, run the same line again; it overwrites.
+<strong>To remove</strong>, delete the folder. Add it to
+<code>.gitignore</code> if you would rather not commit it, or commit it
+so everyone on the repository gets the same one.</p>
+
+<p>To check a board against the specification,
+<code>pip install oifmd</code> then <code>oifmd validate &lt;board&gt;</code>.</p>
 
 <h2>Everything an agent needs, below</h2>
 <p>The rest of this page is the skill in full. An agent handed only this

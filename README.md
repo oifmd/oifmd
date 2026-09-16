@@ -108,8 +108,25 @@ Checked against the billing code at this commit. Holds.
 
 ## Install
 
-The format needs no tool. The validator is there when you want the
-conformance list in section 8 of the spec checked for you.
+The format needs no tool. Two optional things help.
+
+**The agent skill**, so an agent can run a board without being told how.
+Most agents read the [Agent Skills](https://agentskills.io) convention:
+
+```sh
+mkdir -p .agents/skills/oif && curl -fsSL https://oif.md/skill.md -o .agents/skills/oif/SKILL.md
+```
+
+Claude Code reads its own directory instead:
+
+```sh
+mkdir -p .claude/skills/oif && curl -fsSL https://oif.md/skill.md -o .claude/skills/oif/SKILL.md
+```
+
+Run the same line again to update; delete the folder to remove.
+
+**The validator**, when you want the conformance list in section 8 of
+the spec checked for you.
 
 ```sh
 pip install oifmd
