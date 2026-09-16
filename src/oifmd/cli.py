@@ -194,6 +194,27 @@ def scan_issues(root: Path, board: dict) -> tuple[list[Issue], list[Finding]]:
     return issues, findings
 
 
+def check_prose_tokens(text: str, p: str, key: str | None,
+                       slugs: dict[str, str]) -> list[Finding]:
+    """Spec 5.1: a token's slug is advisory, so a stale one is a warning.
+
+    Only tokens naming this board are checked; a slug for another board's
+    record cannot be verified from here.
+    """
+    out: list[Finding] = []
+    for m in TOKEN_RE.finditer(text):
+        if key is None or m["key"] != key or not m["slug"]:
+            continue
+        actual = slugs.get(m["id"])
+        if actual is None:
+            out.append(Finding("error", p,
+                f"{m.group(0)} does not resolve within this board"))
+        elif actual != m["slug"]:
+            out.append(Finding("warn", p,
+                f"{m.group(0)} carries a stale slug; the record is now {actual!r}"))
+    return out
+
+
 def check_about(p: str, front: dict, required: bool, repo_root: Path | None = None) -> list[Finding]:
     """Validate the `about` key (spec 3.4)."""
     out: list[Finding] = []
@@ -404,6 +425,17 @@ def validate(root: Path) -> list[Finding]:
     for it in issues:
         findings += check_issue(it, ids, key, repo_root, board.get("_complete"))
     findings += check_comments_dir(root, ids, repo_root)
+    slugs = {it.id: it.slug for it in issues}
+    for it in issues:
+        findings += check_prose_tokens(it.body, str(it.path), key, slugs)
+    cdir = root / "comments"
+    if cdir.is_dir():
+        for f in sorted(cdir.rglob("*.md")):
+            if f.name in RESERVED_FILES:
+                continue
+            _, body, err = split_frontmatter(f.read_text(encoding="utf-8"))
+            if not err:
+                findings += check_prose_tokens(body, str(f), key, slugs)
     if board.get("_comments_mode") == "sidecar":
         for it in issues:
             if "\n## Comments" in it.body or it.body.startswith("## Comments"):
